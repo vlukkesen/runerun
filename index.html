@@ -1,0 +1,1328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>RuneRun</title>
+<meta name="description" content="RuneRun is a fantasy adventure that plays in your earbuds while you run. Run to runes on real streets, choose what happens, and level up by the kilometre.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Crect width='1024' height='1024' rx='236' fill='%231a1008'/%3E%3Ccircle cx='512' cy='512' r='360' fill='none' stroke='%23c4a04a' stroke-width='34' stroke-dasharray='521.49 44' stroke-dashoffset='260.75'/%3E%3Ccircle cx='512' cy='512' r='280' fill='none' stroke='%238b7355' stroke-width='24' stroke-dasharray='399.82 40' stroke-dashoffset='419.82'/%3E%3Cpath d='M512 402 622 512 512 622 402 512Z M512 462.5 561.5 512 512 561.5 462.5 512Z' fill='%23c4a04a' fill-rule='evenodd'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Spectral:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;500;700&family=Roboto:wght@400;500;700;800&display=swap">
+<style>
+@font-face { font-family:"MCI"; src:url("assets/mci.ttf"); font-display:block; }
+:root {
+  color-scheme:dark;
+  --ground:#1a1008; --surf-low:#1e150d; --surf:#2a1f14; --line-q:#3a2a1a;
+  --line:#5a4a3a; --line-s:#8b7355; --brass:#c4a04a; --brass-hi:#e0b25a; --parch:#e8dcc8; --text:#d4c4a0;
+  --muted:#8b7355; --faint:#5a4a3a; --gold:#FFD700; --green:#6BD46E; --red:#e0776f; --quest:#E8883A;
+  --display:"Cinzel","Trajan Pro",Georgia,serif; --body:"Spectral",Georgia,serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace; --app:"Roboto","Helvetica Neue",Arial,sans-serif;
+}
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { margin:0; background-color:var(--ground); color:var(--parch);
+  background-image:radial-gradient(ellipse 1100px 700px at 70% -10%, rgba(196,160,74,.14), transparent 70%);
+  background-repeat:no-repeat;
+  font-family:var(--body); font-size:17px; line-height:1.65; font-weight:300;
+  -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+.mci { font-family:"MCI"; font-weight:normal; font-style:normal; line-height:1; display:inline-block; }
+a { color:inherit; text-decoration:none; }
+a:focus-visible, button:focus-visible, summary:focus-visible { outline:2px solid var(--brass); outline-offset:3px; }
+.wrap { max-width:1180px; margin:0 auto; padding:0 28px; }
+h1 { font-family:var(--display); font-size:clamp(2.3rem,5vw,3.7rem); font-weight:700;
+  letter-spacing:.05em; text-transform:uppercase; color:var(--brass); margin:0 0 24px; line-height:1.04; }
+h1 em { font-style:normal; color:var(--parch); }
+h2 { font-family:var(--display); font-size:clamp(1.6rem,3.4vw,2.3rem); font-weight:700; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--parch); margin:0 0 18px; line-height:1.1; text-wrap:balance; }
+h3 { font-family:var(--display); font-size:.95rem; font-weight:600; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--brass); margin:0 0 8px; }
+p { max-width:62ch; margin:0 0 16px; }
+.lede { font-size:1.18rem; line-height:1.6; color:var(--muted); }
+.lede strong, p strong { color:var(--parch); font-weight:400; }
+.eyebrow { font-family:var(--mono); font-size:.7rem; font-weight:700; letter-spacing:.24em;
+  text-transform:uppercase; color:var(--muted); margin-bottom:20px; display:flex; align-items:center; gap:12px; }
+.eyebrow::before { content:""; width:28px; height:1px; background:var(--brass); }
+hr.rule { height:1px; border:0; margin:0;
+  background:linear-gradient(90deg,var(--brass) 0%,rgba(196,160,74,.22) 38%,transparent 100%); }
+.note { font-family:var(--mono); font-size:.74rem; line-height:1.7; color:var(--faint); margin-top:22px; max-width:80ch; }
+.note b { color:var(--muted); font-weight:500; }
+
+/* nav */
+nav { position:sticky; top:0; z-index:50; backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  background:rgba(26,16,8,.72); border-bottom:1px solid transparent; transition:border-color .3s; }
+nav.scrolled { border-bottom-color:var(--line-q); }
+nav .wrap { display:flex; align-items:center; gap:14px; height:66px; }
+.brand { display:flex; align-items:center; gap:11px; font-family:var(--display); font-weight:700;
+  letter-spacing:.14em; color:var(--brass); font-size:1.05rem; }
+.brand em { font-style:normal; color:var(--parch); }
+.brand svg { width:30px; height:30px; }
+.navLinks { margin-left:auto; display:flex; gap:26px; font-family:var(--mono); font-size:.68rem;
+  font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); }
+.navLinks a { position:relative; transition:color .2s; }
+.navLinks a::after { content:""; position:absolute; left:0; right:0; bottom:-6px; height:1px; background:var(--brass);
+  transform:scaleX(0); transform-origin:left; transition:transform .25s ease; }
+.navLinks a:hover, .navLinks a.on { color:var(--parch); }
+.navLinks a.on::after { transform:scaleX(1); }
+.btn { display:inline-flex; align-items:center; gap:10px; font-family:var(--app); font-weight:800;
+  letter-spacing:1px; text-transform:uppercase; font-size:14px; border-radius:14px; padding:15px 22px;
+  background:var(--brass); color:#1a1008; border:2px solid var(--brass); cursor:pointer;
+  transition:transform .18s ease, filter .18s ease, box-shadow .18s ease; }
+.btn:hover { transform:translateY(-2px); filter:brightness(1.08); box-shadow:0 10px 30px rgba(196,160,74,.25); }
+.btn .mci { font-size:20px; }
+.btn.ghost { background:transparent; color:var(--parch); border-color:var(--line-s); }
+.btn.ghost:hover { box-shadow:none; border-color:var(--brass); }
+.btn.sm { padding:9px 14px; font-size:12px; border-radius:11px; }
+@media (max-width:900px) { .navLinks { display:none; } nav .btn.sm { margin-left:auto; } }
+
+/* hero */
+.hero { display:grid; grid-template-columns:1.1fr .9fr; gap:56px; align-items:center; padding:70px 0 90px; }
+.heroCopy .lede { margin-bottom:32px; }
+.ctaRow { display:flex; gap:14px; flex-wrap:wrap; }
+.facts { display:flex; gap:32px; flex-wrap:wrap; margin-top:44px; padding-top:22px; border-top:1px solid var(--line-q); }
+.fact b { display:block; font-family:var(--display); font-size:1.9rem; color:var(--brass); line-height:1; font-weight:700; }
+.fact span { font-family:var(--mono); font-size:.62rem; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); }
+@media (max-width:900px) { .hero { grid-template-columns:1fr; padding-top:40px; } .phoneWrap { order:-1; } }
+
+/* phone (live demo) */
+.phoneWrap { display:flex; justify-content:center; position:relative; }
+.phoneWrap::before { content:""; position:absolute; width:120%; aspect-ratio:1; top:50%; left:50%;
+  transform:translate(-50%,-50%); background:radial-gradient(circle, rgba(196,160,74,.13), transparent 60%); pointer-events:none; }
+.phone { width:320px; height:660px; border-radius:40px; padding:10px; background:#0d0804; flex:none;
+  border:1px solid var(--line); box-shadow:0 40px 90px rgba(0,0,0,.65), inset 0 0 0 2px #21170d; position:relative; }
+.screen { position:absolute; inset:10px; border-radius:31px; overflow:hidden; background:#1a1008; font-family:var(--app); }
+.screen canvas { position:absolute; inset:0; width:100%; height:100%; display:block; }
+.notch { position:absolute; top:10px; left:50%; transform:translateX(-50%); width:84px; height:22px;
+  border-radius:12px; background:#0d0804; z-index:6; }
+.statusTop { position:absolute; top:0; left:0; right:0; height:70px; z-index:4;
+  background:linear-gradient(#1a1008 25%, rgba(26,16,8,0)); }
+.dock { position:absolute; left:0; right:0; bottom:0; height:70px; z-index:5; background:#1a1008;
+  border-top:1px solid #3a2a1a; display:flex; align-items:center; padding:0 14px; gap:12px; }
+.dStat { flex:1; }
+.dStat b { display:block; color:#E8DCC8; font-size:17px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1.1; }
+.dStat span { color:#8B7355; font-size:8.5px; font-weight:700; letter-spacing:1px; text-transform:uppercase; }
+.dBtn { width:40px; height:40px; border-radius:20px; display:flex; align-items:center; justify-content:center;
+  background:#2a1f14; border:1px solid #5a4a3a; color:#E8DCC8; font-size:20px; }
+.dBtn.stopBtn { background:rgba(198,40,40,.18); border-color:rgba(224,119,111,.5); color:#e0776f; }
+.sheet { position:absolute; left:0; right:0; bottom:70px; z-index:5; background:#1e150d;
+  border-top-left-radius:20px; border-top-right-radius:20px; border:1px solid #3a2a1a; border-bottom:0;
+  height:58px; transition:height .55s cubic-bezier(.2,.9,.25,1); overflow:hidden; }
+.sheet.open { height:345px; }
+.grip { width:36px; height:4px; border-radius:2px; background:#5a4a3a; margin:8px auto 0; }
+.peek { display:flex; align-items:center; gap:10px; padding:8px 16px 0; height:44px; }
+.peek .mci { font-size:20px; color:#C4A04A; }
+.peek .pk1 { color:#E8DCC8; font-size:13px; font-weight:700; }
+.peek .pk2 { color:#8B7355; font-size:11.5px; margin-left:auto; font-variant-numeric:tabular-nums; }
+.sheetBody { padding:6px 14px 14px; opacity:0; transform:translateY(10px); transition:opacity .35s ease .15s, transform .35s ease .15s; }
+.sheet.open .sheetBody { opacity:1; transform:none; }
+.sbHead { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.kindBadge { width:38px; height:38px; border-radius:19px; display:flex; align-items:center; justify-content:center;
+  font-size:20px; color:#1a1008; flex-shrink:0; }
+.sbT { color:#E8DCC8; font-size:15px; font-weight:800; letter-spacing:.5px; }
+.sbS { color:#8B7355; font-size:10.5px; display:flex; align-items:center; gap:6px; }
+.wave { display:inline-flex; gap:2px; align-items:center; height:12px; }
+.wave i { width:2px; background:#C4A04A; border-radius:1px; animation:wave 0.9s ease-in-out infinite; }
+.wave i:nth-child(2){animation-delay:.12s} .wave i:nth-child(3){animation-delay:.24s} .wave i:nth-child(4){animation-delay:.36s} .wave i:nth-child(5){animation-delay:.48s}
+.wave.still i { animation:none; height:3px !important; }
+@keyframes wave { 0%,100%{height:3px} 50%{height:12px} }
+.replay { margin-left:auto; width:32px; height:32px; border-radius:16px; border:1px solid #5a4a3a;
+  display:flex; align-items:center; justify-content:center; color:#C4A04A; font-size:17px; }
+.opts { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+.opt { background:#2a1f14; border:1px solid #3a2a1a; border-radius:14px; height:78px; padding:10px;
+  display:flex; align-items:flex-end; color:#E8DCC8; font-size:12.5px; font-weight:700; line-height:1.25;
+  transition:background .2s, border-color .2s, transform .2s, opacity .3s; position:relative; }
+.opt::before { content:attr(data-n); position:absolute; top:9px; left:10px; font-family:var(--mono);
+  font-size:9px; color:#5a4a3a; font-weight:700; }
+.opt.tap { background:#C4A04A; border-color:#C4A04A; color:#1a1008; transform:scale(.96); }
+.opt.tap::before { color:#1a1008; }
+.opts.dim .opt:not(.tap) { opacity:.3; }
+.opt.skel { color:transparent; background:linear-gradient(90deg,#2a1f14 0%,#35281a 50%,#2a1f14 100%);
+  background-size:200% 100%; animation:shimmer 1.1s linear infinite; }
+.opt.skel::before { display:none; }
+@keyframes shimmer { to { background-position:-200% 0; } }
+.pill { margin-top:10px; border:1px dashed rgba(196,160,74,.7); border-radius:12px; padding:9px;
+  text-align:center; color:#C4A04A; font-size:11.5px; font-weight:700; letter-spacing:.5px; }
+.result { position:absolute; left:50%; top:38%; transform:translate(-50%,-50%) scale(.8); z-index:7;
+  background:#1e150d; border:1px solid #8B7355; border-radius:14px; padding:11px 16px; display:flex; gap:9px; align-items:center;
+  color:#E8DCC8; font-size:13.5px; font-weight:700; opacity:0; transition:opacity .3s, transform .4s cubic-bezier(.2,1.4,.4,1);
+  white-space:nowrap; pointer-events:none; box-shadow:0 14px 40px rgba(0,0,0,.5); }
+.result.show { opacity:1; transform:translate(-50%,-50%) scale(1); }
+.result .mci { font-size:20px; }
+@media (max-width:400px) { .phone { transform:scale(.9); margin:-30px 0; } }
+
+/* sections: B's skeleton, A's heads */
+section { padding:100px 0; }
+section + section { border-top:1px solid var(--line-q); }
+.secHead { display:flex; align-items:baseline; gap:18px; margin-bottom:34px; padding-bottom:13px; border-bottom:1px solid var(--line-q); }
+.secHead .num { font-family:var(--mono); font-size:.72rem; font-weight:700; color:var(--brass); }
+.secHead .lbl { font-family:var(--mono); font-size:.68rem; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); }
+.sh { max-width:760px; margin-bottom:46px; }
+.sh .lede { margin:0; }
+.two { display:grid; grid-template-columns:1fr 1fr; gap:56px; align-items:center; }
+@media (max-width:900px) { .two { grid-template-columns:1fr; gap:36px; } }
+.sub { margin-top:80px; }
+.subHead { display:flex; align-items:end; justify-content:space-between; gap:40px; margin-bottom:28px; flex-wrap:wrap; }
+.subHead h2 { font-size:clamp(1.25rem,2.4vw,1.6rem); margin:0; }
+.subHead p { margin:0; color:var(--muted); max-width:44ch; }
+
+/* steps */
+.steps { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+@media (max-width:860px) { .steps { grid-template-columns:1fr; } }
+.step { background:var(--surf-low); border:1px solid var(--line-q); border-radius:14px; padding:26px; position:relative; overflow:hidden;
+  transition:border-color .25s, transform .25s; }
+.step:hover { border-color:var(--line); transform:translateY(-3px); }
+.step .n { font-family:var(--display); font-size:3.4rem; font-weight:700; color:rgba(196,160,74,.14);
+  position:absolute; right:18px; top:6px; line-height:1; }
+.ico { width:46px; height:46px; border-radius:12px; background:rgba(196,160,74,.1); border:1px solid rgba(196,160,74,.35);
+  display:flex; align-items:center; justify-content:center; color:var(--brass); font-size:24px; margin-bottom:18px; }
+.step p { color:var(--muted); font-size:.98rem; margin:0; }
+
+/* runes */
+.runeGrid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+@media (max-width:860px) { .runeGrid { grid-template-columns:1fr; } }
+.rune { background:var(--surf-low); border:1px solid var(--line-q); border-radius:14px; padding:18px;
+  display:flex; gap:15px; align-items:flex-start; transition:transform .25s ease, border-color .25s ease, background .25s; cursor:default; }
+.rune:hover { transform:translateY(-4px); border-color:var(--c); background:#221810; }
+.rune .orb { width:46px; height:46px; border-radius:23px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+  font-size:22px; border:2px dashed var(--line-s); color:transparent; position:relative; transition:all .35s ease; }
+.rune .orb::after { content:"?"; position:absolute; font-family:var(--display); color:var(--muted); font-size:18px; font-weight:700; transition:opacity .2s; }
+.rune:hover .orb, .rune.lit .orb { background:var(--c); border:2px solid var(--c); color:#1a1008; box-shadow:0 0 0 6px color-mix(in srgb, var(--c) 18%, transparent); }
+.rune:hover .orb::after, .rune.lit .orb::after { opacity:0; }
+.rune b { display:block; color:var(--parch); font-family:var(--display); font-size:.95rem; letter-spacing:.1em; text-transform:uppercase; margin-bottom:3px; }
+.rune span { color:var(--muted); font-size:.92rem; line-height:1.5; display:block; }
+.more { margin-top:14px; background:var(--surf-low); border:1px dashed var(--line); border-radius:14px; padding:22px 24px;
+  display:flex; align-items:center; gap:28px; flex-wrap:wrap; }
+.more b { display:block; color:var(--parch); font-family:var(--display); font-size:.95rem; letter-spacing:.1em; text-transform:uppercase; margin-bottom:3px; }
+.more span { color:var(--muted); font-size:.95rem; display:block; max-width:48ch; }
+.moreOrbs { display:flex; gap:10px; flex-wrap:wrap; }
+.moreOrbs i { width:38px; height:38px; border-radius:19px; border:2px dashed var(--line-s); display:flex; align-items:center; justify-content:center;
+  font-family:var(--display); font-style:normal; font-weight:700; font-size:15px; color:var(--muted);
+  animation:mq 3.2s ease-in-out infinite; transition:transform .3s cubic-bezier(.2,1.4,.4,1), border-color .3s, color .3s; }
+.moreOrbs i:hover { transform:rotate(-12deg) scale(1.12); border-color:var(--brass); color:var(--brass); }
+@keyframes mq { 0%,70%,100% { border-color:var(--line-s); box-shadow:none; } 80% { border-color:var(--brass); box-shadow:0 0 0 5px rgba(196,160,74,.14); } }
+.rune .tag { font-family:var(--mono); font-size:.58rem; letter-spacing:.16em; text-transform:uppercase; color:var(--faint); margin-top:8px; }
+
+/* features grid */
+.feats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1px; background:var(--line-q);
+  border:1px solid var(--line-q); border-radius:18px; overflow:hidden; }
+.feat { background:var(--ground); padding:30px 28px 32px; transition:background .3s; }
+.feat:hover { background:var(--surf-low); }
+.feat:hover .ico { background:var(--brass); color:#1a1008; border-color:var(--brass); }
+.feat .ico { transition:background .25s, color .25s, border-color .25s; }
+.feat p { color:var(--muted); font-size:.98rem; margin:0; }
+.feat .num { font-family:var(--mono); font-size:.85rem; color:var(--brass); }
+@media (max-width:960px) { .feats { grid-template-columns:1fr 1fr; } }
+@media (max-width:640px) { .feats { grid-template-columns:1fr; } }
+
+/* combat */
+.fight { background:var(--surf-low); border:1px solid var(--line-q); border-radius:18px; padding:22px; font-family:var(--app); }
+.foe { display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+.foe .av { width:52px; height:52px; border-radius:14px; background:rgba(224,74,58,.14); border:1px solid rgba(224,74,58,.45);
+  display:flex; align-items:center; justify-content:center; font-size:26px; color:#E04A3A; transition:transform .1s; }
+.foe .av.hit { animation:shake .35s; }
+@keyframes shake { 0%,100%{transform:none} 25%{transform:translateX(-5px) rotate(-4deg)} 75%{transform:translateX(5px) rotate(4deg)} }
+.foe b { color:#E8DCC8; font-size:16px; font-weight:800; display:block; }
+.foe small { color:#8B7355; font-size:11.5px; letter-spacing:.4px; }
+.hpBar { height:8px; background:#3a2a1a; border-radius:4px; overflow:hidden; margin-top:6px; width:190px; max-width:100%; }
+.hpBar i { display:block; height:100%; background:#E04A3A; width:100%; transition:width .6s cubic-bezier(.3,1,.4,1); }
+.rollRow { display:flex; align-items:center; gap:18px; padding:18px; background:#1a1008; border:1px solid #3a2a1a; border-radius:14px; margin-bottom:14px; }
+.d20 { width:74px; height:74px; position:relative; flex-shrink:0; }
+.d20 svg { position:absolute; inset:0; width:100%; height:100%; transition:transform .1s; }
+.d20 .v { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:var(--display);
+  font-weight:700; font-size:24px; color:#E8DCC8; font-variant-numeric:tabular-nums; }
+.d20.spin svg { animation:spin .5s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.math { font-size:13px; color:#8B7355; line-height:1.7; font-variant-numeric:tabular-nums; flex:1; min-height:66px; }
+.math b { color:#E8DCC8; }
+.math .hitT { color:var(--green); font-weight:800; } .math .missT { color:var(--red); font-weight:800; } .math .critT { color:var(--gold); font-weight:800; }
+.fightBtns { display:flex; gap:10px; }
+.fightBtns .btn { flex:1; justify-content:center; }
+.log { margin-top:12px; font-family:var(--mono); font-size:11px; color:var(--faint); min-height:18px; }
+.defeat { margin-top:22px; padding:16px 18px; border-left:2px solid var(--line-s); color:var(--muted); font-size:.98rem; }
+.defeat strong { color:var(--parch); font-weight:400; }
+
+/* an example place */
+.place { background:var(--surf-low); border:1px solid var(--line-q); border-radius:22px; padding:22px; font-family:var(--app);
+  max-width:420px; margin:0 auto; position:relative; box-shadow:0 30px 80px rgba(0,0,0,.45); }
+.hubBanner { display:flex; flex-direction:column; align-items:center; gap:6px; padding:18px 16px; background:#2a1f14; border:1px solid #8B7355;
+  border-radius:16px; margin-bottom:12px; text-align:center; }
+.hubBanner .mci { font-size:32px; color:#C4A04A; animation:bob 3.2s ease-in-out infinite; }
+@keyframes bob { 50% { transform:translateY(-3px); } }
+.hubBanner b { color:#C4A04A; font-size:21px; font-weight:700; letter-spacing:2px; }
+.hubBanner i { color:#8B7355; font-size:12.5px; }
+.startBtn { display:flex; align-items:center; gap:14px; background:var(--brass); color:#1a1008; border-radius:16px; padding:16px;
+  margin-bottom:12px; position:relative; overflow:hidden; }
+.startBtn > .mci { font-size:28px; }
+.startBtn div { flex:1; }
+.startBtn b { display:block; font-size:17px; font-weight:800; letter-spacing:1px; text-transform:uppercase; }
+.startBtn small { color:#3a2a1a; font-size:12px; }
+.startBtn .chev { font-size:24px; }
+.startBtn::after { content:""; position:absolute; top:0; bottom:0; width:40%; left:-50%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent); animation:sheen 3.4s ease-in-out infinite; }
+@keyframes sheen { 0%,60% { left:-50%; } 100% { left:120%; } }
+.place .tiles { max-width:none; margin:0; gap:12px; }
+.place .tile { padding:16px; gap:7px; }
+.place .tile .mci { font-size:28px; }
+.tile { position:relative; }
+.tile.lit { border-color:var(--brass); background:#33260f; }
+.tile .corner { transition:color .3s; } .tile.lit .corner { color:var(--brass); }
+.roadOn { display:flex; align-items:center; gap:12px; margin:22px auto 0; max-width:420px; font-family:var(--mono); font-size:.62rem;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--faint); }
+.roadOn i { flex:1; height:2px; background:repeating-linear-gradient(90deg,var(--line) 0 6px,transparent 6px 13px);
+  -webkit-mask:linear-gradient(90deg,#000,transparent); mask:linear-gradient(90deg,#000,transparent); animation:march 1.2s linear infinite; background-size:13px 2px; }
+@keyframes march { to { background-position:13px 0; } }
+.cornerList { list-style:none; padding:0; margin:26px 0 0; display:grid; gap:12px; max-width:52ch; }
+.cornerList li { display:grid; grid-template-columns:118px 1fr; gap:14px; padding-bottom:12px; border-bottom:1px solid var(--line-q); color:var(--muted); font-size:.98rem; }
+.cornerList li b { font-family:var(--mono); font-size:.64rem; letter-spacing:.16em; text-transform:uppercase; color:var(--brass); font-weight:700; padding-top:4px; }
+.tiles { display:grid; grid-template-columns:1fr 1fr; gap:10px; font-family:var(--app); max-width:340px; margin-top:26px; }
+.tile { background:#2a1f14; border:1px solid #3a2a1a; border-radius:14px; padding:14px; display:flex; flex-direction:column; align-items:center; gap:5px; text-align:center;
+  transition:transform .2s, border-color .3s, background .3s; }
+.tile:hover { transform:translateY(-3px); border-color:#8B7355; }
+.tile .mci { font-size:26px; color:#C4A04A; }
+.tile b { color:#E8DCC8; font-size:13.5px; }
+.tile small { color:#8B7355; font-size:10.5px; }
+.tile .corner { font-family:var(--mono); font-size:8.5px; letter-spacing:1.2px; color:#5a4a3a; text-transform:uppercase; }
+
+/* activities: the app's Activities list and Run detail, at phone scale */
+.actPhones { display:flex; justify-content:center; align-items:center; gap:28px; flex-wrap:wrap; }
+.actArrow { color:var(--brass); font-size:34px; opacity:.6; animation:nudge 1.8s ease-in-out infinite; }
+@keyframes nudge { 50% { transform:translateX(6px); opacity:1; } }
+@media (max-width:760px) { .actArrow { transform:rotate(90deg); animation:none; } }
+.appScr { position:absolute; inset:0; display:flex; flex-direction:column; background:#1a1008; font-family:var(--app); padding-top:26px; }
+.aHead { height:46px; flex-shrink:0; display:flex; align-items:center; gap:8px; padding:0 11px; border-bottom:1px solid #3a2a1a; }
+.aHeadIco { color:#C4A04A; font-size:16px; }
+.aHeadT { flex:1; min-width:0; }
+.aHeadT b { display:block; color:#C4A04A; font-size:14px; font-weight:700; letter-spacing:.9px; line-height:1.1; }
+.aHeadT small { display:block; color:#5a4a3a; font-size:8px; font-weight:600; letter-spacing:.8px; text-transform:uppercase; }
+.aMeta { color:#5a4a3a; font-size:9px; font-weight:600; letter-spacing:.6px; text-transform:capitalize; }
+.aIconBtn { width:26px; height:26px; border-radius:13px; background:#1e150d; border:1px solid #5a4a3a; color:#C4A04A; font-size:13px;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.aSum { display:flex; border-bottom:1px solid #241a10; flex-shrink:0; }
+.aSum div { flex:1; text-align:center; padding:9px 0; }
+.aSum div + div { border-left:1px solid #241a10; }
+.aSum b { display:block; color:#E8DCC8; font-size:15px; font-weight:800; line-height:1.2; }
+.aSum b small { color:#8B7355; font-size:8px; font-weight:600; }
+.aSum span { color:#5a4a3a; font-size:7px; font-weight:700; letter-spacing:1px; text-transform:uppercase; }
+.aBody { flex:1; overflow-y:auto; scrollbar-width:none; position:relative; }
+.aBody::-webkit-scrollbar { display:none; }
+#aList { padding:0 10px 20px; }
+.aBand { display:flex; align-items:center; padding:11px 0 6px; border-bottom:1px solid #2a1f14; }
+.aBand b { flex:1; color:#C4A04A; font-size:9.5px; font-weight:800; letter-spacing:1.4px; }
+.aBand span { color:#8B7355; font-size:8.5px; font-weight:700; } .aBand span i { font-style:normal; color:#E8DCC8; font-weight:800; }
+.aRow { display:flex; gap:9px; cursor:pointer; border-radius:10px; margin:0 -6px; padding:0 6px; transition:background .2s; }
+.aRow:hover { background:rgba(196,160,74,.05); }
+.aRow.sel { background:rgba(196,160,74,.1); }
+.aRail { width:24px; display:flex; flex-direction:column; align-items:center; flex-shrink:0; }
+.aMile { width:21px; height:21px; border-radius:11px; background:#C4A04A; color:#1a1008; font-size:11px; display:flex; align-items:center; justify-content:center; margin-top:11px; }
+.aMile.trial { border-radius:6px; background:rgba(196,160,74,.16); border:1.5px solid #C4A04A; color:#C4A04A; }
+.aStem { flex:1; width:1.5px; background:#3a2a1a; margin-top:4px; min-height:8px; }
+.aRow.last .aStem { visibility:hidden; }
+.aRowBody { flex:1; display:flex; align-items:center; gap:9px; padding:8px 0 9px; min-width:0; }
+.aRowInfo { flex:1; min-width:0; }
+.aRowTop { display:flex; align-items:baseline; gap:7px; }
+.aKm { color:#E8DCC8; font-size:17.5px; font-weight:800; letter-spacing:-.3px; }
+.aKm small, .aPace small { color:#8B7355; font-size:8.5px; font-weight:700; }
+.aDot { width:3px; height:3px; border-radius:2px; background:#3a2a1a; align-self:center; }
+.aPace { color:#C4A04A; font-size:10.5px; font-weight:800; }
+.aDate { margin-left:auto; color:#5a4a3a; font-size:8px; font-weight:800; letter-spacing:.7px; text-transform:uppercase; }
+.aLine { color:#8B7355; font-size:10px; font-weight:600; margin-top:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.aTrialLine { display:flex; align-items:center; gap:6px; margin-top:5px; color:#8B7355; font-size:10px; font-weight:600; }
+.aPill { background:#C4A04A; color:#1a1008; font-size:7px; font-weight:800; letter-spacing:.7px; text-transform:uppercase; border-radius:6px; padding:2px 6px; }
+.aThumb { width:53px; height:53px; border-radius:9px; border:1px solid #2a1f14; background:#150e07; flex-shrink:0; overflow:hidden; }
+.aThumb svg { display:block; width:100%; height:100%; }
+.dMap { position:relative; height:270px; background:#150e07; overflow:hidden; }
+.dMap svg { position:absolute; inset:0; width:100%; height:100%; }
+.dMap .fade { position:absolute; left:0; right:0; bottom:0; height:110px; background:linear-gradient(rgba(26,16,8,0),#1a1008 85%); pointer-events:none; }
+.dHero { position:absolute; left:11px; right:11px; bottom:18px; display:flex; align-items:flex-end; gap:12px; }
+.dHero .big { display:flex; align-items:baseline; gap:4px; }
+.dHero .big b { color:#E8DCC8; font-size:35px; font-weight:800; letter-spacing:-.4px; line-height:1; font-variant-numeric:tabular-nums; }
+.dHero .big small { color:#8B7355; font-size:12px; font-weight:700; }
+.dHero .sm span { display:block; color:#8B7355; font-size:7px; font-weight:700; letter-spacing:.9px; text-transform:uppercase; }
+.dHero .sm b { color:#E8DCC8; font-size:13.5px; font-weight:700; font-variant-numeric:tabular-nums; }
+.dHero .sm b small { color:#8B7355; font-size:8px; font-weight:600; }
+.dCard { margin:10px 10px 0; background:#1e150d; border:1px solid #2a1f14; border-radius:15px; padding:10px 11px; }
+.dCard:last-child { margin-bottom:10px; }
+.dCardHead { display:flex; align-items:center; gap:6px; }
+.dCardT { color:#C4A04A; font-size:9px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; }
+.dCount { margin-left:auto; color:#5a4a3a; font-size:8px; letter-spacing:.8px; }
+.dRing { display:flex; align-items:center; gap:13px; }
+.dRing .rw { width:61px; height:61px; position:relative; flex-shrink:0; }
+.dRing .rw svg { width:100%; height:100%; }
+.dRing .rw .c { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.dRing .rw .c b { color:#E8DCC8; font-size:17px; font-weight:800; line-height:1; }
+.dRing .rw .c small { color:#8B7355; font-size:7px; font-weight:700; letter-spacing:1px; }
+.dRing .rt b { display:block; color:#E8DCC8; font-size:12px; font-weight:700; }
+.dRing .rt span { display:block; color:#8B7355; font-size:9.5px; margin-top:2px; line-height:1.4; }
+.dRingFill { transition:stroke-dasharray 1.4s cubic-bezier(.2,.9,.25,1); }
+.spHead { display:flex; align-items:center; }
+.spHead b { flex:1; color:#8B7355; font-size:7px; font-weight:900; letter-spacing:1.3px; text-transform:uppercase; }
+.spHead span { color:#5a4a3a; font-size:7px; font-weight:700; letter-spacing:.6px; }
+.spRows { display:grid; gap:4px; margin-top:6px; }
+.spRow { display:flex; align-items:center; gap:7px; }
+.spN { width:27px; color:#5a4a3a; font-size:8px; font-weight:900; }
+.spV { width:38px; color:#E8DCC8; font-size:10.5px; font-weight:800; font-variant-numeric:tabular-nums; }
+.spBar { flex:1; height:6px; border-radius:3px; background:#241a10; overflow:hidden; }
+.spBar i { display:block; height:100%; width:0; border-radius:3px; background:#7FC98A; transition:width .7s cubic-bezier(.2,.9,.25,1); }
+.spRow.slow .spBar i { background:#E04A3A; }
+.spD { width:38px; text-align:right; font-size:9px; font-weight:800; color:#7FC98A; font-variant-numeric:tabular-nums; }
+.spRow.slow .spD { color:#e0776f; }
+.dPills { display:flex; flex-wrap:wrap; gap:6px; margin-top:9px; }
+.dPill { display:flex; align-items:center; gap:5px; padding:6px 9px; border-radius:9px; background:#241a10; border:1px solid #3a2a1a; }
+.dPill .mci { font-size:11px; }
+.dPill b { color:#E8DCC8; font-size:10.5px; font-weight:700; } .dPill span { color:#8B7355; font-size:9.5px; font-weight:600; }
+.chronA { margin-top:10px; }
+.cRow { display:flex; gap:9px; align-items:flex-start; opacity:0; transform:translateY(6px); transition:opacity .45s, transform .45s; }
+.cRow.on { opacity:1; transform:none; }
+.cRail { width:24px; align-self:stretch; display:flex; flex-direction:column; align-items:center; }
+.cDot { width:23px; height:23px; border-radius:12px; border:1px solid; display:flex; align-items:center; justify-content:center; font-size:12px; }
+.cStem { flex:1; width:1.5px; background:#3a2a1a; margin-top:4px; min-height:11px; }
+.cRow:last-child .cStem { display:none; }
+.cInfo { flex:1; padding:1px 0 11px; min-width:0; }
+.cInfo b { display:block; color:#E8DCC8; font-size:11.5px; font-weight:700; }
+.cInfo .m { font-size:7.5px; font-weight:700; letter-spacing:.7px; margin-top:2px; }
+.cInfo .q { color:#8B7355; font-size:9.5px; line-height:1.4; margin-top:3px; }
+.loot { display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; }
+.lc { font-size:8px; font-weight:800; background:#241a10; border:1px solid #3a2a1a; border-radius:6px; padding:1px 5px; }
+.cDist { color:#C4A04A; font-size:10.5px; font-weight:800; padding-top:3px; } .cDist small { color:#5a4a3a; font-size:7.5px; font-weight:600; }
+.tPill { margin-left:auto; font-size:7px; font-weight:900; letter-spacing:.9px; text-transform:uppercase; border-radius:7px; padding:2px 7px;
+  color:#7FC98A; background:rgba(127,201,138,.16); border:1px solid #2f5a30; }
+.tStats { display:flex; margin-top:9px; }
+.tStats div { flex:1; text-align:center; }
+.tStats b { display:block; color:#E8DCC8; font-size:14px; font-weight:800; } .tStats b.win { color:#7FC98A; }
+.tStats span { color:#5a4a3a; font-size:7px; font-weight:800; letter-spacing:1px; text-transform:uppercase; }
+.tSplits { margin-top:10px; border-top:1px solid #241a10; padding-top:9px; }
+.tFoot { color:#8B7355; font-size:9px; margin-top:9px; font-style:italic; }
+.aDone { flex-shrink:0; margin:8px 10px 10px; display:flex; align-items:center; justify-content:center; gap:7px; padding:13px 0; border-radius:13px;
+  background:#C4A04A; color:#1a1008; font-size:12px; font-weight:800; letter-spacing:.9px; text-transform:uppercase; }
+.aDone .mci { font-size:16px; }
+
+/* made for running */
+.checks { list-style:none; margin:0; padding:0; display:grid; gap:20px; }
+.checks li { display:grid; grid-template-columns:34px 1fr; gap:14px; }
+.checks .ck { width:28px; height:28px; border-radius:14px; border:1px solid rgba(196,160,74,.45); background:rgba(196,160,74,.08);
+  display:flex; align-items:center; justify-content:center; color:var(--brass); font-size:16px; margin-top:2px; }
+.checks b { display:block; font-family:var(--display); font-weight:600; letter-spacing:.12em; text-transform:uppercase; font-size:.9rem; color:var(--parch); margin-bottom:3px; }
+.checks p { color:var(--muted); font-size:.98rem; margin:0; }
+.quote { background:var(--surf-low); border:1px solid var(--line-q); border-radius:18px; padding:34px 32px; position:relative; overflow:hidden; }
+.quote::before { content:""; position:absolute; inset:0; background:radial-gradient(ellipse at 20% 0%, rgba(196,160,74,.1), transparent 60%); pointer-events:none; }
+.qWave { display:flex; gap:4px; align-items:center; height:48px; margin-bottom:22px; }
+.qWave i { display:block; width:4px; border-radius:2px; background:var(--brass); height:10%; animation:qw 1.4s ease-in-out infinite; }
+@keyframes qw { 0%,100% { height:12%; } 50% { height:var(--h); } }
+.quote p { font-style:italic; font-weight:300; font-size:1.3rem; line-height:1.55; color:var(--parch); min-height:6.2em; }
+.quote p .cur { display:inline-block; width:2px; height:1em; background:var(--brass); vertical-align:-2px; margin-left:2px; animation:blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity:0; } }
+.quote .who { margin-top:18px; font-family:var(--mono); font-size:.66rem; letter-spacing:.16em; color:var(--muted); }
+
+/* pricing */
+.plans { display:grid; grid-template-columns:1fr 1fr; gap:20px; max-width:880px; }
+@media (max-width:760px) { .plans { grid-template-columns:1fr; } }
+.plan { background:var(--surf-low); border:1px solid var(--line-q); border-radius:18px; padding:30px; transition:transform .25s, box-shadow .25s; }
+.plan:hover { transform:translateY(-4px); box-shadow:0 20px 50px rgba(0,0,0,.35); }
+.plan.plus { border-color:var(--brass); background:linear-gradient(160deg, rgba(196,160,74,.1), var(--surf-low) 55%); }
+.plan h3 { display:flex; align-items:center; gap:10px; }
+.plan .tagP { font-family:var(--mono); font-size:.6rem; letter-spacing:.1em; background:var(--brass); color:#1a1008; border-radius:999px; padding:2px 9px; }
+.plan .big { font-family:var(--display); font-size:2.6rem; font-weight:700; color:var(--brass); line-height:1; margin:14px 0 6px; }
+.plan .big small { font-family:var(--body); font-size:1rem; color:var(--muted); font-weight:300; letter-spacing:0; }
+.plan .subP { font-family:var(--mono); font-size:.66rem; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-bottom:20px; min-height:1.2em; }
+.plan ul { list-style:none; padding:0; margin:0; }
+.plan li { padding:9px 0; border-top:1px solid var(--line-q); color:var(--muted); font-size:.96rem; display:flex; gap:10px; }
+.plan li .mci { color:var(--brass); font-size:18px; margin-top:3px; }
+.runsLeft { display:flex; gap:8px; margin:4px 0 20px; }
+.runsLeft i { width:34px; height:8px; border-radius:4px; background:var(--line-q); transition:background .4s; }
+.runsLeft i.on { background:var(--brass); }
+
+/* faq */
+.faq { max-width:820px; display:grid; gap:12px; }
+details { background:var(--surf-low); border:1px solid var(--line-q); border-radius:14px; padding:0 24px; transition:border-color .25s; }
+details[open] { border-color:var(--line); }
+summary { cursor:pointer; list-style:none; padding:20px 0; font-family:var(--display); font-weight:600; letter-spacing:.1em; text-transform:uppercase;
+  font-size:.92rem; display:flex; justify-content:space-between; align-items:center; gap:16px; color:var(--parch); }
+summary::-webkit-details-marker { display:none; }
+summary::after { content:"+"; font-family:var(--mono); color:var(--brass); font-size:20px; line-height:1; transition:transform .3s; }
+details[open] summary::after { transform:rotate(45deg); }
+details .ans { overflow:hidden; }
+details p { padding:0 0 22px; margin:0; color:var(--muted); }
+
+/* end */
+.end { text-align:center; padding:130px 0 100px; position:relative; }
+.end h2 { font-size:clamp(2rem,5vw,3.2rem); color:var(--brass); }
+.end p { margin:0 auto 30px; color:var(--muted); }
+.bigMark { width:120px; height:120px; margin:0 auto 30px; display:block; }
+footer { border-top:1px solid var(--line-q); padding:26px 0 40px; font-family:var(--mono); font-size:.66rem; letter-spacing:.14em; text-transform:uppercase; color:var(--faint); }
+footer .wrap { display:flex; justify-content:space-between; align-items:center; gap:20px; flex-wrap:wrap; }
+footer .brand { font-size:.9rem; }
+footer .brand svg { width:22px; height:22px; }
+
+/* rune mark rings */
+.ringA { transform-box:fill-box; transform-origin:center; animation:rot 40s linear infinite; }
+.ringB { transform-box:fill-box; transform-origin:center; animation:rot 60s linear infinite reverse; }
+@keyframes rot { to { transform:rotate(360deg); } }
+
+/* reveal */
+.rv { opacity:0; transform:translateY(26px); transition:opacity .8s ease, transform .8s cubic-bezier(.2,.8,.2,1); }
+.rv.in { opacity:1; transform:none; }
+.rv.d1 { transition-delay:.1s } .rv.d2 { transition-delay:.2s } .rv.d3 { transition-delay:.3s }
+
+@media (max-width:640px) {
+  .wrap { padding:0 16px; } body { font-size:16px; } section { padding:72px 0; }
+  .sub { margin-top:60px; } .btn { white-space:normal; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation:none !important; transition:none !important; }
+  .rv { opacity:1; transform:none; }
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="mark" viewBox="135 135 754 754">
+      <circle class="ringA" cx="512" cy="512" r="360" fill="none" stroke="#c4a04a" stroke-width="34" stroke-dasharray="521.49 44" stroke-dashoffset="260.74"/>
+      <circle class="ringB" cx="512" cy="512" r="280" fill="none" stroke="#8b7355" stroke-width="24" stroke-dasharray="399.82 40" stroke-dashoffset="419.82"/>
+      <path d="M512 402 622 512 512 622 402 512Z M512 462.5 561.5 512 512 561.5 462.5 512Z" fill="#c4a04a" fill-rule="evenodd"/>
+    </symbol>
+  </defs>
+</svg>
+
+<nav id="nav" aria-label="Main">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="RuneRun home"><svg aria-hidden="true"><use href="#mark"/></svg><span>RUNE<em>RUN</em></span></a>
+    <div class="navLinks">
+      <a href="#how">How it works</a><a href="#game">The game</a><a href="#world">The world</a><a href="#activities">Activities</a><a href="#pricing">Pricing</a><a href="#faq">Questions</a>
+    </div>
+    <a class="btn sm" href="#get"><span class="mci">&#xf0032;</span>Get the app</a>
+  </div>
+</nav>
+
+<div class="wrap" id="top">
+  <header class="hero">
+    <div class="heroCopy">
+      <div class="eyebrow rv">A running game for your earbuds</div>
+      <h1 class="rv d1">Run to the rune.<br><em>Choose what happens.</em></h1>
+      <p class="lede rv d2">RuneRun is a fantasy adventure you play while you run. Runes appear on the <strong>real streets around you</strong>. Run to one, and a narrator tells you what you find there. Tap one of four choices, and the story answers.</p>
+      <div class="ctaRow rv d3">
+        <a class="btn" href="#get"><span class="mci">&#xf02bc;</span>Coming to Google Play</a>
+        <a class="btn ghost" href="#how">See how it works</a>
+      </div>
+    </div>
+
+    <div class="phoneWrap rv d2">
+      <div class="phone" role="img" aria-label="The RuneRun run screen: a runner moving through streets, reaching runes and choosing from four options">
+        <div class="screen">
+          <canvas id="map"></canvas>
+          <div class="statusTop"></div>
+          <div class="notch"></div>
+          <div class="result" id="result"><span class="mci" id="resIco"></span><span id="resTxt"></span></div>
+          <div class="sheet" id="sheet">
+            <div class="grip"></div>
+            <div class="peek"><span class="mci" id="pkIco">&#xf0352;</span><span class="pk1" id="pk1">Nearest rune</span><span class="pk2" id="pk2">—</span></div>
+            <div class="sheetBody">
+              <div class="sbHead">
+                <div class="kindBadge" id="kBadge"><span class="mci" id="kIco"></span></div>
+                <div><div class="sbT" id="kName">Cache</div><div class="sbS"><span class="wave" id="wave"><i></i><i></i><i></i><i></i><i></i></span><span id="kState">Narrating</span></div></div>
+                <div class="replay"><span class="mci">&#xf0459;</span></div>
+              </div>
+              <div class="opts" id="opts"></div>
+              <div class="pill">Intimidate · 1× per run</div>
+            </div>
+          </div>
+          <div class="dock">
+            <div class="dStat"><b id="dTime">0:00</b><span>Time</span></div>
+            <div class="dStat"><b id="dDist">0.00</b><span>km</span></div>
+            <div class="dStat"><b id="dPace">5:32</b><span>/km</span></div>
+            <div class="dBtn"><span class="mci">&#xf03e4;</span></div>
+            <div class="dBtn stopBtn"><span class="mci">&#xf04db;</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+  <hr class="rule">
+</div>
+
+<!-- 01 · HOW IT WORKS -->
+<section id="how">
+  <div class="wrap">
+    <div class="secHead rv"><span class="num">01</span><span class="lbl">How it works</span></div>
+    <div class="sh">
+      <h2 class="rv">Three things happen on every run.</h2>
+      <p class="lede rv d1">You run your normal route, or go looking. The phone stays in your pocket until you reach a rune.</p>
+    </div>
+    <div class="steps">
+      <div class="step rv"><span class="n">1</span><div class="ico"><span class="mci">&#xf070e;</span></div><h3>Start a run</h3>
+        <p>Tap Start Run and go. GPS tracks your distance, time and pace. Ten runes appear on real streets around you, 200 to 650 metres away, in every direction.</p></div>
+      <div class="step rv d1"><span class="n">2</span><div class="ico"><span class="mci">&#xf02cb;</span></div><h3>Reach a rune</h3>
+        <p>Pick one and run to it. Within about 40 metres it lights up. Tap it, and the narrator starts the scene in your earbuds: a traveller, an ambush, a hidden cache.</p></div>
+      <div class="step rv d2"><span class="n">3</span><div class="ico"><span class="mci">&#xf0741;</span></div><h3>Choose what you do</h3>
+        <p>Four big buttons, easy to hit mid-stride. A hidden dice roll decides how well it goes. Win gold, find gear, lose health, or start a fight. Then run on.</p></div>
+    </div>
+    <p class="note rv">Hunt for runes and you find one about <b>every 300 m</b>. On a fixed route you pass one about <b>every 650 m</b>. Either way, a 5 km run is a handful of scenes.</p>
+
+    <div class="sub">
+      <div class="subHead">
+        <h2 class="rv">You find out what it is when you get there.</h2>
+        <p class="rv d1">On the map every rune looks the same. Here are three of them. The rest you'll meet on the road.</p>
+      </div>
+      <div class="runeGrid" id="runeGrid"></div>
+      <div class="more rv" id="more">
+        <div class="moreOrbs" id="moreOrbs"></div>
+        <div><b>And many more</b><span>Some are common, some you might see once a season. We're not saying which. Run and find out.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 · THE GAME -->
+<section id="game">
+  <div class="wrap">
+    <div class="secHead rv"><span class="num">02</span><span class="lbl">The game</span></div>
+    <div class="sh">
+      <h2 class="rv">A real character, built one run at a time.</h2>
+      <p class="lede rv d1">Your character keeps everything between runs: level, gold, gear and health. Here is what there is to do.</p>
+    </div>
+    <div class="feats rv">
+      <div class="feat"><div class="ico"><span class="mci">&#xf1155;</span></div><h3>Fights with real dice</h3>
+        <p>Combat uses the D&amp;D 5e rules. Roll a d20, add your strength, and beat the enemy's armour to hit. Attack, use an ability, or try to run away.</p></div>
+      <div class="feat"><div class="ico"><span class="mci">&#xf12bd;</span></div><h3>Level up by running</h3>
+        <p>No grinding. Kilometres are the only way to level up. <span class="num">5 km</span> gets you to level 2, and <span class="num">250 km</span> to level 10.</p></div>
+      <div class="feat"><div class="ico"><span class="mci">&#xf0a01;</span></div><h3>New places to open</h3>
+        <p>You start at a tavern called The Rusty Flagon. As you level up, the road opens further out. What is out there is yours to find.</p></div>
+      <div class="feat"><div class="ico"><span class="mci">&#xf04dc;</span></div><h3>Shops that stay put</h3>
+        <p>Every place has a shop, and its list never reshuffles. A sword you can't afford today is there, at the same price, when you come back.</p></div>
+      <div class="feat"><div class="ico"><span class="mci">&#xf04e5;</span></div><h3>Abilities and gear</h3>
+        <p>Some levels teach you a new ability, and some make you choose between two. Weapons and armour come from shops, fights and the road.</p></div>
+      <div class="feat"><div class="ico"><span class="mci">&#xf0068;</span></div><h3>Never the same story</h3>
+        <p>An AI writes every scene around where you are and what you carry. No two runs tell the same story, and your choices change what comes next.</p></div>
+    </div>
+
+    <div class="sub two">
+      <div>
+        <h2 class="rv">The dice are real.</h2>
+        <p class="rv d1">Fights are rolled on your phone. The AI doesn't decide if you hit. <strong>d20 + Strength + proficiency</strong> against the enemy's armour, weapon dice for damage, doubled on a natural 20.</p>
+        <p class="rv d1">The narrator only comes back once it's over, to tell you how it went.</p>
+        <div class="defeat rv d2">Lose, and the story stops. <strong>The run doesn't.</strong> Your kilometres still count, and you're back on your feet for the next one.</div>
+      </div>
+      <div class="fight rv d1">
+        <div class="foe">
+          <div class="av" id="foeAv"><span class="mci">&#xf0787;</span></div>
+          <div><b>Bandit Scout</b><small>AC 13 · <span id="foeHpTxt">14</span> / 14 HP</small><div class="hpBar"><i id="foeHp"></i></div></div>
+        </div>
+        <div class="rollRow">
+          <div class="d20" id="d20">
+            <svg viewBox="0 0 100 100"><polygon points="50,4 93,28 93,72 50,96 7,72 7,28" fill="#2a1f14" stroke="#c4a04a" stroke-width="3"/>
+              <polygon points="50,22 76,66 24,66" fill="none" stroke="#5a4a3a" stroke-width="2"/>
+              <path d="M50 4 50 22 M93 28 76 66 M7 28 24 66 M50 96 24 66 M50 96 76 66 M93 72 76 66 M7 72 24 66 M93 28 50 22 M7 28 50 22" stroke="#5a4a3a" stroke-width="1.5"/></svg>
+            <div class="v" id="d20v">20</div>
+          </div>
+          <div class="math" id="math">Longsword · 1d8 slashing<br>+3 STR · +2 proficiency</div>
+        </div>
+        <div class="fightBtns">
+          <button class="btn" id="atk"><span class="mci">&#xf04e5;</span>Attack</button>
+          <button class="btn ghost" id="rst">Reset</button>
+        </div>
+        <div class="log" id="log">Tap attack.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 · THE WORLD: one example place, no count -->
+<section id="world">
+  <div class="wrap">
+    <div class="secHead rv"><span class="num">03</span><span class="lbl">The world</span></div>
+    <div class="two">
+      <div>
+        <div class="eyebrow rv">One place on the map</div>
+        <h2 class="rv">Crossroads Town.</h2>
+        <p class="lede rv d1">A bustling market town at the crossroads. Cart wheels creak on cobblestone, a blacksmith hammers away, and traders hawk their wares.</p>
+        <p class="rv d1">Kilometres are your XP. Run far enough and the road opens to somewhere new. We won't tell you where, or how many. Every place you reach has <strong>the same four tiles in the same corners</strong>, so you always know where things are:</p>
+        <ul class="cornerList rv d2">
+          <li><b>Top left</b><span>Something only this place has. Here, the Quest Board: bounties and rumours.</span></li>
+          <li><b>Top right</b><span>A shop whose list never reshuffles. Here, The Iron Ledger.</span></li>
+          <li><b>Bottom left</b><span>Somewhere to pay for your health back. Here, The Temple.</span></li>
+          <li><b>Bottom right</b><span>Fast travel to anywhere you have already been.</span></li>
+        </ul>
+      </div>
+      <div class="rv d1">
+        <div class="place" id="place">
+          <div class="hubBanner">
+            <span class="mci">&#xf0dd4;</span>
+            <b>Crossroads Town</b>
+            <i>A bustling market town at the crossroads. Traders hawk their wares.</i>
+          </div>
+          <div class="startBtn"><span class="mci">&#xf0787;</span><div><b>Start Adventure</b><small>Venture into the unknown</small></div><span class="mci chev">&#xf0142;</span></div>
+          <div class="tiles" id="tiles">
+            <div class="tile"><span class="mci">&#xf0a01;</span><b>Quest Board</b><small>Bounties &amp; rumors</small></div>
+            <div class="tile"><span class="mci">&#xf0110;</span><b>The Iron Ledger</b><small>Buy &amp; sell wares</small></div>
+            <div class="tile"><span class="mci">&#xf0144;</span><b>The Temple</b><small>Rest &amp; heal</small></div>
+            <div class="tile"><span class="mci">&#xf0352;</span><b>Fast Travel</b><small>Skip the journey</small></div>
+          </div>
+        </div>
+        <div class="roadOn"><span>The road goes on</span><i></i></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 · ACTIVITIES: the app's own two screens, the list and a run opened from it -->
+<section id="activities">
+  <div class="wrap">
+    <div class="secHead rv"><span class="num">04</span><span class="lbl">Activities</span></div>
+    <div class="sh">
+      <h2 class="rv">Every run, kept.</h2>
+      <p class="lede rv d1">Each run is saved with its route, its splits and every rune you found on it. This is the app's own Activities screen. Tap a run on the left and it opens on the right, the way it does on your phone.</p>
+    </div>
+    <div class="actPhones">
+      <div class="phone rv"><div class="screen"><div class="appScr">
+        <div class="aHead">
+          <span class="mci aHeadIco">&#xf046e;</span>
+          <div class="aHeadT"><b>Activities</b><small>the chronicle</small></div>
+          <span class="aIconBtn mci">&#xf034d;</span><span class="aIconBtn mci">&#xf0493;</span>
+        </div>
+        <div class="aSum">
+          <div><b>41.6<small> km</small></b><span>Career</span></div>
+          <div><b>Lv 5</b><span>13.4 km to 6</span></div>
+          <div><b>6</b><span>Activities</span></div>
+        </div>
+        <div class="aBody" id="aList"></div>
+      </div></div></div>
+
+      <div class="actArrow rv d1" aria-hidden="true"><span class="mci">&#xf0142;</span></div>
+
+      <div class="phone rv d1"><div class="screen"><div class="appScr">
+        <div class="aHead">
+          <span class="mci aHeadIco">&#xf023c;</span>
+          <div class="aHeadT"><b id="dTitle">21 Sep</b></div>
+          <span class="aMeta" id="dMeta">explore · Sun 21 Sep</span><span class="aIconBtn mci">&#xf0493;</span>
+        </div>
+        <div class="aBody" id="dBody"></div>
+        <div class="aDone"><span class="mci">&#xf14f7;</span>Back to the chronicle</div>
+      </div></div></div>
+    </div>
+    <p class="note rv" style="text-align:center;margin-left:auto;margin-right:auto">Tap any run on the left. Scroll the one on the right.</p>
+  </div>
+</section>
+
+<!-- 05 · MADE FOR RUNNING -->
+<section id="running">
+  <div class="wrap">
+    <div class="secHead rv"><span class="num">05</span><span class="lbl">Made for running</span></div>
+    <div class="two" style="align-items:start">
+      <div>
+        <h2 class="rv" style="margin-bottom:32px">Built to be used without looking.</h2>
+        <ul class="checks">
+          <li class="rv"><span class="ck mci">&#xf012c;</span><div><b>The story is audio</b><p>Everything is read to you. There is no text to read on screen, only the four choices.</p></div></li>
+          <li class="rv d1"><span class="ck mci">&#xf012c;</span><div><b>Big buttons</b><p>The four choices are large tiles in a 2×2 grid, easy to hit while you are moving.</p></div></li>
+          <li class="rv d1"><span class="ck mci">&#xf012c;</span><div><b>Pause and stop, always</b><p>Time, distance, pace, pause and end sit at the bottom of the screen during scenes and fights.</p></div></li>
+          <li class="rv d2"><span class="ck mci">&#xf012c;</span><div><b>A proper run log</b><p>Every run is saved with its route, kilometre splits, pace and every scene you played.</p></div></li>
+          <li class="rv d2"><span class="ck mci">&#xf012c;</span><div><b>Kilometres or miles</b><p>Pick your unit, choose one of three narrator voices, and turn the music and haptics on or off.</p></div></li>
+        </ul>
+      </div>
+      <div class="quote rv d1" id="quote">
+        <div class="qWave" id="qWave" aria-hidden="true"></div>
+        <p id="qText" aria-label="A woman sits by a small fire at the edge of the road, a pack of odd tools beside her. She looks up as you slow down. 'You're running a long way for someone with no map,' she says."></p>
+        <div class="who">WHAT YOU HEAR · A TRAVELLER RUNE</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 06 · PRICING -->
+<section id="pricing">
+  <div class="wrap">
+    <div class="secHead rv"><span class="num">06</span><span class="lbl">Pricing</span></div>
+    <div class="sh">
+      <h2 class="rv">Four runs a month, free.</h2>
+      <p class="lede rv d1">The only thing that is limited is the number of runs. Your character, the shops, the map and your history are open to everyone.</p>
+    </div>
+    <div class="plans">
+      <div class="plan rv">
+        <h3>Free</h3>
+        <div class="big">$0</div><div class="subP">4 runs every month</div>
+        <div class="runsLeft" id="pips"><i></i><i></i><i></i><i></i></div>
+        <ul>
+          <li><span class="mci">&#xf0352;</span>4 runs every month</li>
+          <li><span class="mci">&#xf0110;</span>All places, shops and characters</li>
+          <li><span class="mci">&#xf02cb;</span>Full narration and run history</li>
+        </ul>
+      </div>
+      <div class="plan plus rv d1">
+        <h3>RuneRun Plus <span class="tagP">UNLIMITED</span></h3>
+        <div class="big">$7.99 <small>per month</small></div><div class="subP">or $47.99 a year, half the price</div>
+        <ul>
+          <li><span class="mci">&#xf070e;</span>Unlimited runs</li>
+          <li><span class="mci">&#xf0538;</span>Everything in Free</li>
+          <li><span class="mci">&#xf012c;</span>Cancel any time</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 07 · QUESTIONS -->
+<section id="faq">
+  <div class="wrap">
+    <div class="secHead rv"><span class="num">07</span><span class="lbl">Questions</span></div>
+    <div class="sh"><h2 class="rv">Common questions.</h2></div>
+    <div class="faq">
+      <details class="rv" open><summary>Do I have to look at my phone?</summary><div class="ans"><p>Only to make a choice. The story plays in your earbuds. When a scene ends you look down, tap one of four big buttons, and keep going.</p></div></details>
+      <details class="rv"><summary>Do I need to know Dungeons &amp; Dragons?</summary><div class="ans"><p>No. The dice are rolled for you and the maths is done by the app. If you do know D&amp;D, you will recognise the rules: d20 to hit, armour class, strength and dexterity.</p></div></details>
+      <details class="rv"><summary>Does it work on a treadmill?</summary><div class="ans"><p>No. RuneRun uses GPS to place runes on real streets and to measure your distance, so you need to be outside.</p></div></details>
+      <details class="rv"><summary>What happens if my character dies?</summary><div class="ans"><p>The story stops, but your run does not. You keep running and your distance still counts toward your level. When you end the run, your character comes back with some health.</p></div></details>
+      <details class="rv"><summary>Which phones does it run on?</summary><div class="ans"><p>RuneRun is coming to Android first.</p></div></details>
+      <details class="rv"><summary>What counts as one of my four free runs?</summary><div class="ans"><p>Any run you start and save. The count resets on the first of each month.</p></div></details>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="end" id="get">
+    <svg class="bigMark rv" aria-hidden="true"><use href="#mark"/></svg>
+    <h2 class="rv">Your next run is an adventure.</h2>
+    <p class="lede rv d1">RuneRun is coming to Google Play. Your first four runs every month are free. Earbuds recommended.</p>
+    <a class="btn rv d2" href="#top"><span class="mci">&#xf02bc;</span>Coming to Google Play</a>
+  </div>
+</div>
+
+<footer><div class="wrap">
+  <a class="brand" href="#top" aria-label="RuneRun home"><svg aria-hidden="true"><use href="#mark"/></svg><span>RUNE<em>RUN</em></span></a>
+  <span><a href="privacy.html">Privacy</a> · A running game · © 2026 RuneRun</span>
+</div></footer>
+
+<script>
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const g = cp => String.fromCodePoint(cp);
+const $ = id => document.getElementById(id);
+const once = (el, fn, threshold = .4) => new IntersectionObserver((es, o) => { if (es[0].isIntersecting) { o.disconnect(); fn(); } }, { threshold }).observe(el);
+
+/* ---------- nav + reveal + counters ---------- */
+const nav = $('nav');
+addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 10), { passive:true });
+const links = [...document.querySelectorAll('.navLinks a')];
+const spy = new IntersectionObserver(es => es.forEach(e => {
+  if (e.isIntersecting) links.forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id));
+}), { rootMargin:'-45% 0px -50% 0px' });
+['how','game','world','activities','pricing','faq'].forEach(id => spy.observe($(id)));
+
+const io = new IntersectionObserver(es => es.forEach(e => {
+  if (!e.isIntersecting) return;
+  e.target.classList.add('in'); io.unobserve(e.target);
+}), { threshold:.15 });
+document.querySelectorAll('.rv').forEach(el => io.observe(el));
+
+function countUp(el, to, dur = 1400, fmt = v => Math.round(v)) {
+  const t0 = performance.now();
+  (function f(t) {
+    const p = RM ? 1 : Math.min(1, Math.max(0, (t - t0) / dur)), e = 1 - Math.pow(1 - p, 3);
+    el.textContent = fmt(to * e);
+    if (p < 1) requestAnimationFrame(f);
+  })(t0);
+}
+setTimeout(() => document.querySelectorAll('[data-count]').forEach(el => countUp(el, +el.dataset.count)), 500);
+
+/* ---------- rune kinds ---------- */
+const KINDS = {
+  traveller:{ name:'Traveller', ico:0xf0b59, c:'#C4A04A', d:'Someone on the road. The longest conversations.', tag:'Up to 6 exchanges',
+    opts:['Share your fire, ask her name','Ask what is on the road ahead','Look at what she is selling','Nod and keep running'], res:[[0xf0bc2,'Quest rune placed ahead','#E8883A'],[0xf0352,'A rune marked on your map','#C4A04A'],[0xf0e10,'Bought: Tinker\'s Compass · −8 gold','#5FA8DC'],[0xf046e,'She waves you on','#8B7355']] },
+  cache:{ name:'Cache', ico:0xf0726, c:'#FFD700', d:'Something hidden. Worth checking for traps.', tag:'Often gold',
+    opts:['Pry the lid open','Check for traps','Grab it and go','Leave it'], res:[[0xf124f,'+24 gold','#FFD700'],[0xf124f,'Trap disarmed · +24 gold','#FFD700'],[0xf02d1,'Needle trap · −3 HP, +24 gold','#e0776f'],[0xf046e,'Left for someone else','#8B7355']] },
+  ambush:{ name:'Ambush', ico:0xf0787, c:'#E04A3A', d:'A fight. Short and sharp, two exchanges.', tag:'Combat',
+    opts:['Draw your sword','Shout a warning','Sprint past','Throw your pack'], res:[[0xf0538,'Victory · −4 HP','#6BD46E'],[0xf0538,'They scatter · −1 HP','#6BD46E'],[0xf046e,'Outran them · −2 HP','#e0776f'],[0xf0e10,'Escaped · lost 10 gold','#e0776f']] },
+  waystone:{ name:'Waystone', ico:0xf05e2, c:'#7FC98A', d:'A roadside shrine. A moment to recover.', tag:'Often healing',
+    opts:['Light the candle','Read the carving','Rest a moment','Pass it by'], res:[[0xf02d1,'+6 HP','#6BD46E'],[0xf0352,'A rune marked on your map','#C4A04A'],[0xf02d1,'+4 HP','#6BD46E'],[0xf046e,'You run on','#8B7355']] },
+  pedlar:{ name:'Pedlar', ico:0xf04dc, c:'#5FA8DC', d:'A trader with a pack full of odd things.', tag:'Buy & sell',
+    opts:['See his wares','Haggle hard','Sell your ore','Wave and go'], res:[[0xf0e10,'Bought: Iron Ring · −12 gold','#5FA8DC'],[0xf0e10,'Bought: Iron Ring · −7 gold','#5FA8DC'],[0xf124f,'Sold your ore · +11 gold','#FFD700'],[0xf046e,'He tips his hat','#8B7355']] },
+  relic:{ name:'Relic', ico:0xf011a, c:'#B07FD0', d:'An old place with a story still in it.', tag:'Lore', opts:[], res:null },
+  hoard:{ name:'Hoard', ico:0xf01c8, c:'#FFE9A8', d:'A proper pile of treasure. Rare.', tag:'Legendary', opts:[], res:null },
+  bargain:{ name:'Bargain', ico:0xf05d1, c:'#FFE9A8', d:'Someone offers a deal. It always costs something.', tag:'Legendary', opts:[], res:null },
+  champion:{ name:'Champion', ico:0xf18bc, c:'#FFE9A8', d:'The hardest fight on the road. Rare.', tag:'Legendary', opts:[], res:null },
+  quest:{ name:'Quest', ico:0xf0bc2, c:'#E8883A', d:'A job from an earlier scene. Its rune sits further up the road.', tag:'Up to 3 chapters', opts:[], res:null },
+};
+const grid = $('runeGrid');
+[KINDS.traveller, KINDS.cache, KINDS.ambush].forEach((k, i) => {
+  const el = document.createElement('div');
+  el.className = 'rune rv' + (i % 3 ? ' d' + (i % 3) : '');
+  el.style.setProperty('--c', k.c);
+  el.innerHTML = `<div class="orb"><span class="mci">${g(k.ico)}</span></div><div><b>${k.name}</b><span>${k.d}</span><div class="tag">${k.tag}</div></div>`;
+  grid.appendChild(el); io.observe(el);
+});
+const moreOrbs = $('moreOrbs');
+for (let i = 0; i < 7; i++) { const o = document.createElement('i'); o.textContent = '?'; o.style.animationDelay = (i * .32) + 's'; moreOrbs.appendChild(o); }
+once(grid, () => [...grid.children].forEach((el, i) => {
+  setTimeout(() => el.classList.add('lit'), 700 + i * 140); setTimeout(() => el.classList.remove('lit'), 1500 + i * 140);
+}));
+
+/* ---------- phone demo: a street map with a real perspective divide ---------- */
+const cv = $('map'), ctx = cv.getContext('2d');
+let W = 0, H = 0;
+function size() { const r = cv.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
+  W = r.width; H = r.height; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); }
+size(); addEventListener('resize', size);
+
+const G = 110;
+function rnd(i, j, s) { const x = Math.sin(i * 127.1 + j * 311.7 + s * 74.7) * 43758.5453; return x - Math.floor(x); }
+function node(i, j) { return { x: i * G + (rnd(i, j, 1) - .5) * 34, y: j * G + (rnd(i, j, 2) - .5) * 34 }; }
+const streets = [];
+for (let i = -7; i <= 9; i++) for (let j = -7; j <= 9; j++) {
+  if (rnd(i, j, 3) > .12) streets.push([node(i, j), node(i + 1, j), rnd(i, j, 5) > .82]);
+  if (rnd(i, j, 4) > .12) streets.push([node(i, j), node(i, j + 1), rnd(i, j, 6) > .82]);
+}
+const corners = [[0,0],[0,-4],[3,-4],[3,-1],[5,-1],[5,2],[1,2],[1,4],[-2,4],[-2,0],[0,0]];
+const path = [];
+for (let c = 0; c < corners.length - 1; c++) {
+  let [i, j] = corners[c]; const [ti, tj] = corners[c + 1];
+  while (i !== ti || j !== tj) { path.push(node(i, j)); i += Math.sign(ti - i); j += Math.sign(tj - j); }
+}
+path.push(node(0, 0));
+// every leg of the route is a street, even where the random grid left a gap
+const same = (a, b) => Math.abs(a.x - b.x) < .01 && Math.abs(a.y - b.y) < .01;
+const hasStreet = (a, b) => streets.some(([p, q]) => (same(p, a) && same(q, b)) || (same(p, b) && same(q, a)));
+for (let k = 1; k < path.length; k++) if (!hasStreet(path[k - 1], path[k])) streets.push([path[k - 1], path[k], false]);
+const cum = [0];
+for (let k = 1; k < path.length; k++) cum.push(cum[k - 1] + Math.hypot(path[k].x - path[k - 1].x, path[k].y - path[k - 1].y));
+const LOOP = cum[cum.length - 1];
+function at(s) {
+  s = ((s % LOOP) + LOOP) % LOOP;
+  let k = 1; while (cum[k] < s) k++;
+  const a = path[k - 1], b = path[k], t = (s - cum[k - 1]) / (cum[k] - cum[k - 1]);
+  return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, dx: (b.x - a.x) / (cum[k] - cum[k - 1]), dy: (b.y - a.y) / (cum[k] - cum[k - 1]) };
+}
+// nine runes on the route, spread evenly round the loop, in an order that never repeats a kind back to back
+const ORDER = ['cache','traveller','ambush','waystone','pedlar'];
+const onRoute = ORDER.map((k, i) => [110 + i * (LOOP - 300) / ORDER.length, k]);
+// and plenty more out in the streets around it: midpoints of streets the route never touches
+const routeKey = new Set(path.map(q => Math.round(q.x) + ',' + Math.round(q.y)));
+const offStreet = streets.filter(([a, b], n) => !routeKey.has(Math.round(a.x) + ',' + Math.round(a.y)) &&
+  !routeKey.has(Math.round(b.x) + ',' + Math.round(b.y)) && rnd(n, 7, 9) > .94);
+let runes;
+function resetRunes() {
+  runes = onRoute.map(([s, k]) => { const p = at(s); return { x: p.x + 6, y: p.y - 6, s, kind: k, state: 'hidden', t: 0 }; })
+    .concat(offStreet.map(([a, b]) => ({ x:(a.x + b.x) / 2, y:(a.y + b.y) / 2, kind: null, state: 'hidden', t: 0 })));
+}
+resetRunes();
+
+let s = 0, dist = 0, heading = null, trail = [], last = performance.now(), phase = 'run', pt = 0, cur = null;
+const sheet = $('sheet'), opts = $('opts');
+
+function project(x, y, cam, d) {
+  const rx = x - cam.x, ry = y - cam.y;
+  const f = rx * d.x + ry * d.y, r = rx * -d.y + ry * d.x;
+  const z = 1 + f * 0.0022;
+  if (z < 0.35) return null;
+  const S = 1.55;
+  return { x: W / 2 + r * S / z, y: H * .60 - f * S * .58 / z, z, f };
+}
+function fmtTime(sec) { sec = Math.floor(sec); return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0'); }
+
+function setSheetScene(k) {
+  $('kBadge').style.background = k.c; $('kIco').textContent = g(k.ico); $('kName').textContent = k.name;
+  $('kState').textContent = 'Narrating'; $('wave').classList.remove('still');
+  opts.className = 'opts';
+  opts.innerHTML = k.opts.map((o, i) => `<div class="opt" data-n="${i + 1}">${o}</div>`).join('');
+}
+function setSheetWeaving() {
+  $('kState').textContent = 'The fates are weaving…'; $('wave').classList.add('still');
+  opts.className = 'opts'; opts.innerHTML = '<div class="opt skel"></div>'.repeat(4);
+}
+
+function step(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  if (!RM || phase !== 'run') {
+    if (phase === 'run') {
+      const nxt = runes.find(r => r.kind && r.state === 'hidden' && r.s > s - 5), gap = nxt ? nxt.s - s : 400;
+      const v = 38 + Math.min(110, Math.max(0, gap - 60) * .35); s += v * dt; dist += 34 * dt;
+      if (s > LOOP) { s -= LOOP; resetRunes(); trail = []; }
+      const next = runes.find(r => r.kind && r.state === 'hidden' && r.s > s - 5);
+      if (next && next.s - s < 34) { phase = 'found'; pt = 0; cur = next; next.state = 'found'; next.t = now; }
+    } else {
+      pt += dt;
+      const k = KINDS[cur.kind], choice = Math.round(cur.s) % 3;
+      if (phase === 'found' && pt > .9) { phase = 'scene'; setSheetScene(k); sheet.classList.add('open'); }
+      else if (phase === 'scene' && pt > 3.4) { phase = 'tap'; opts.children[choice].classList.add('tap'); opts.classList.add('dim'); }
+      else if (phase === 'tap' && pt > 4.1) { phase = 'weave'; setSheetWeaving(); }
+      else if (phase === 'weave' && pt > 5.1) {
+        phase = 'result'; sheet.classList.remove('open');
+        const rr = k.res[choice]; $('resIco').textContent = g(rr[0]); $('resIco').style.color = rr[2]; $('resTxt').textContent = rr[1];
+        $('result').classList.add('show'); cur.state = 'done'; cur.t = now;
+      }
+      else if (phase === 'result' && pt > 6.8) { $('result').classList.remove('show'); phase = 'run'; }
+    }
+  }
+  const p = at(s);
+  const want = Math.atan2(p.dy, p.dx);
+  if (heading === null) heading = want;
+  let dh = want - heading; while (dh > Math.PI) dh -= 2 * Math.PI; while (dh < -Math.PI) dh += 2 * Math.PI;
+  heading += dh * Math.min(1, dt * 2.6);
+  const d = { x: Math.cos(heading), y: Math.sin(heading) };
+  if (!trail.length || Math.hypot(trail[trail.length - 1].x - p.x, trail[trail.length - 1].y - p.y) > 8) trail.push({ x: p.x, y: p.y });
+  if (trail.length > 260) trail.shift();
+  draw(p, d, now);
+
+  $('dDist').textContent = (dist / 1000).toFixed(2);
+  $('dTime').textContent = fmtTime(dist * .332);
+  const pace = 332 + Math.sin(now / 3000) * 6; $('dPace').textContent = Math.floor(pace / 60) + ':' + String(Math.floor(pace % 60)).padStart(2, '0');
+  if (phase === 'run') {
+    const nx = runes.filter(r => r.state === 'hidden').map(r => Math.hypot(r.x - p.x, r.y - p.y)).sort((a, b) => a - b)[0];
+    $('pkIco').textContent = g(0xf0352); $('pkIco').style.color = '#C4A04A';
+    $('pk1').textContent = 'Nearest rune'; $('pk2').textContent = nx ? Math.round(nx) + ' m' : '—';
+  } else if (phase === 'found') {
+    const k = KINDS[cur.kind]; $('pkIco').textContent = g(k.ico); $('pkIco').style.color = k.c;
+    $('pk1').textContent = k.name + ' · in reach'; $('pk2').textContent = 'Tap';
+  }
+  requestAnimationFrame(step);
+}
+
+function draw(cam, d, now) {
+  ctx.clearRect(0, 0, W, H);
+  const bg = ctx.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#140c06'); bg.addColorStop(1, '#1f150c');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  ctx.lineCap = 'round';
+  for (const [a, b, major] of streets) {
+    const A = project(a.x, a.y, cam, d), B = project(b.x, b.y, cam, d);
+    if (!A || !B) continue;
+    const fog = Math.max(0, Math.min(1, 1 - ((A.f + B.f) / 2 - 420) / 560));
+    if (fog <= 0) continue;
+    ctx.globalAlpha = fog;
+    ctx.strokeStyle = major ? '#4a3a28' : '#342617';
+    ctx.lineWidth = (major ? 7 : 4.5) / ((A.z + B.z) / 2);
+    ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = 'rgba(196,160,74,.85)'; ctx.lineWidth = 3; ctx.lineJoin = 'round';
+  ctx.beginPath(); let open = false;
+  for (const q of trail.concat([cam])) { const P = project(q.x, q.y, cam, d); if (!P) { open = false; continue; } open ? ctx.lineTo(P.x, P.y) : ctx.moveTo(P.x, P.y); open = true; }
+  ctx.stroke();
+  const drawn = runes.map(r => ({ r, P: project(r.x, r.y, cam, d) })).filter(o => o.P && o.P.f < 950).sort((a, b) => b.P.f - a.P.f);
+  for (const { r, P } of drawn) {
+    const sc = Math.min(1.5, 1 / P.z), fog = Math.max(0, Math.min(1, 1 - (P.f - 450) / 480));
+    const age = (now - r.t) / 1000;
+    let alpha = fog;
+    if (r.state === 'done') alpha *= Math.max(0, 1 - age / 1.2);
+    if (alpha <= 0) continue;
+    ctx.globalAlpha = alpha;
+    const R = 13 * sc, y = P.y - R - 4 * sc;
+    ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(P.x, P.y, R * .8, R * .3, 0, 0, 7); ctx.fill();
+    if (r.state === 'hidden') {
+      const br = 1 + Math.sin(now / 500 + r.x) * .06;
+      ctx.fillStyle = '#1e150d'; ctx.beginPath(); ctx.arc(P.x, y, R * br, 0, 7); ctx.fill();
+      ctx.setLineDash([4 * sc, 3 * sc]); ctx.strokeStyle = '#C4A04A'; ctx.lineWidth = 2 * sc;
+      ctx.beginPath(); ctx.arc(P.x, y, R * br, 0, 7); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = '#C4A04A'; ctx.font = `700 ${12 * sc}px Cinzel, serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('?', P.x, y + 1);
+    } else {
+      const k = KINDS[r.kind];
+      if (r.state === 'found') for (let n = 0; n < 2; n++) {
+        const t = ((age + n * .6) % 1.2) / 1.2;
+        ctx.globalAlpha = alpha * (1 - t); ctx.strokeStyle = k.c; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(P.x, y, R + t * 30 * sc, 0, 7); ctx.stroke();
+      }
+      ctx.globalAlpha = alpha;
+      const pop = r.state === 'found' ? Math.min(1, age * 4) : 1;
+      const RR = R * (1 + .25 * pop);
+      ctx.fillStyle = k.c; ctx.beginPath(); ctx.arc(P.x, y - 3 * pop, RR, 0, 7); ctx.fill();
+      ctx.fillStyle = '#1a1008'; ctx.font = `${RR * 1.1}px MCI`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(g(k.ico), P.x, y - 3 * pop + 1);
+    }
+  }
+  ctx.globalAlpha = 1;
+  const me = project(cam.x, cam.y, cam, d);
+  ctx.fillStyle = 'rgba(196,160,74,.18)'; ctx.beginPath(); ctx.arc(me.x, me.y, 16 + Math.sin(now / 400) * 2, 0, 7); ctx.fill();
+  ctx.fillStyle = '#C4A04A'; ctx.beginPath(); ctx.moveTo(me.x, me.y - 12); ctx.lineTo(me.x + 8, me.y + 7); ctx.lineTo(me.x, me.y + 3); ctx.lineTo(me.x - 8, me.y + 7); ctx.closePath(); ctx.fill();
+}
+document.fonts.load('16px MCI').finally(() => requestAnimationFrame(t => { last = t; step(t); }));
+
+/* ---------- combat widget ---------- */
+let foeHp = 14, rolling = false;
+const d20 = $('d20'), d20v = $('d20v'), math = $('math'), log = $('log');
+function roll(n) { return 1 + Math.floor(Math.random() * n); }
+function attack() {
+  if (rolling || foeHp <= 0) return; rolling = true; d20.classList.add('spin');
+  const r = roll(20);
+  const tick = setInterval(() => d20v.textContent = roll(20), 55);
+  setTimeout(() => {
+    clearInterval(tick); d20.classList.remove('spin'); d20v.textContent = r;
+    const tot = r + 5, crit = r === 20, hit = crit || (r !== 1 && tot >= 13);
+    let line = `<b>${r}</b> + 3 STR + 2 prof = <b>${tot}</b> vs AC 13 → `;
+    if (hit) {
+      const a = roll(8), b = crit ? roll(8) : 0, dmg = a + b + 3;
+      line += crit ? `<span class="critT">Critical</span><br>${a} + ${b} (doubled dice) + 3 = <b>${dmg} damage</b>`
+                   : `<span class="hitT">Hit</span><br>1d8 → ${a} + 3 = <b>${dmg} damage</b>`;
+      foeHp = Math.max(0, foeHp - dmg);
+      $('foeAv').classList.remove('hit'); void $('foeAv').offsetWidth; $('foeAv').classList.add('hit');
+    } else line += `<span class="missT">Miss</span><br>The scout steps aside.`;
+    math.innerHTML = line;
+    $('foeHp').style.width = (foeHp / 14 * 100) + '%'; $('foeHpTxt').textContent = foeHp;
+    log.textContent = foeHp <= 0 ? 'Victory. The narrator takes it from here.' : 'Rolled on the phone. Nothing sent to the AI yet.';
+    rolling = false;
+  }, RM ? 0 : 750);
+}
+$('atk').onclick = attack;
+$('rst').onclick = () => { foeHp = 14; $('foeHp').style.width = '100%'; $('foeHpTxt').textContent = 14; math.innerHTML = 'Longsword · 1d8 slashing<br>+3 STR · +2 proficiency'; d20v.textContent = 20; log.textContent = 'Tap attack.'; };
+once(d20, () => setTimeout(attack, 700), .6);
+
+/* ---------- the example place: the four corners light in turn, in step with the list ---------- */
+const tiles = [...$('tiles').children], cornerLis = [...document.querySelectorAll('.cornerList li')];
+once($('place'), () => {
+  if (RM) return;
+  let n = 0;
+  setInterval(() => { tiles.forEach((t, i) => t.classList.toggle('lit', i === n % 4)); n++; }, 1600);
+}, .5);
+cornerLis.forEach((li, i) => { li.addEventListener('mouseenter', () => tiles.forEach((t, j) => t.classList.toggle('lit', i === j))); });
+
+/* ---------- activities: the list, and a run opened from it ---------- */
+const RUNE_META = { traveller:KINDS.traveller, cache:KINDS.cache, ambush:KINDS.ambush, waystone:KINDS.waystone, pedlar:KINDS.pedlar };
+const LV = [0, 5, 12, 22, 36, 55, 82, 120, 173, 250];
+// each find: [fraction along the route, kind, what the AI called it, exchanges, what you chose, what it gave]
+const RUNS = [
+  { day:'Sun 21 Sep', short:'21 Sep', month:'September', type:'explore', km:5.2, secs:1759, careerAfter:41.6, seed:1,
+    corners:[[0,0],[0,-3],[2,-3],[2,-5],[4,-5],[4,-1],[3,-1],[3,1],[0,1],[0,0]], splits:[334,341,329,352,338],
+    found:[[.1,'cache','A strongbox under the bridge',2,'Check it for traps first',{ gold:24 }],
+           [.26,'traveller','A tinker by a small fire',5,'Share your water',{ note:'Quest given' }],
+           [.43,'ambush','Bandits at the ford',2,'Draw your sword',{ hp:-4, note:'Victory' }],
+           [.6,'waystone','A shrine with one candle',3,'Light the candle',{ hp:6 }],
+           [.77,'pedlar','A pedlar with a heavy pack',4,'Sell him your ore',{ gold:11 }],
+           [.92,'cache','A satchel in the reeds',2,'Grab it and run',{ item:['Iron Ring','#6BD46E'] }]] },
+  { day:'Thu 18 Sep', short:'18 Sep', month:'September', type:'trial', km:3.1, secs:968, careerAfter:36.4, seed:2,
+    corners:[[0,0],[3,0],[3,2],[0,2],[0,0]], splits:[309,314,312], trial:{ name:'The Mill Loop', limit:1020, gold:40 }, found:[] },
+  { day:'Mon 15 Sep', short:'15 Sep', month:'September', type:'travel', km:7.8, secs:2769, careerAfter:33.3, seed:3,
+    corners:[[0,0],[1,0],[1,-2],[3,-2],[3,-4],[6,-4],[6,-6],[8,-6]], splits:[352,360,348,371,355,349,362],
+    found:[[.08,'waystone','A cairn at the crossing',2,'Read the carving',{ note:'A rune marked ahead' }],
+           [.22,'ambush','Wolves on the ridge road',2,'Throw your pack and run',{ gold:-10, note:'Escaped' }],
+           [.37,'traveller','A shepherd counting sheep',6,'Help find the lost ewe',{ gold:8 }],
+           [.52,'cache','A hollow tree',2,'Pry it open',{ gold:31 }],
+           [.66,'pedlar','A cart with one wheel',4,'Haggle hard',{ gold:-9, item:['Hunting Dagger','#E8DCC8'] }],
+           [.81,'ambush','A scout on the bridge',2,'Draw your sword',{ hp:-5, note:'Victory' }],
+           [.94,'waystone','A well with clean water',3,'Rest a moment',{ hp:5 }]] },
+  { day:'Fri 12 Sep', short:'12 Sep', month:'September', type:'explore', km:4.0, secs:1452, careerAfter:25.5, seed:4,
+    corners:[[0,0],[-2,0],[-2,-2],[0,-2],[0,-3],[1,-3],[1,0],[0,0]], splits:[366,358,371,357],
+    found:[[.3,'cache','A crate that was not empty',2,'Pry the lid open',{ gold:18 }],
+           [.68,'traveller','A girl chasing a goat',4,'Help her catch it',{ gold:4 }]] },
+  { day:'Fri 29 Aug', short:'29 Aug', month:'August', type:'explore', km:3.6, secs:1310, careerAfter:21.5, seed:5,
+    corners:[[0,0],[0,2],[2,2],[2,0],[0,0]], splits:[362,366,371],
+    found:[[.45,'ambush','A boar in the brambles',2,'Stand your ground',{ hp:-6, item:['Boar Tusk','#E8DCC8'] }]] },
+  { day:'Sun 24 Aug', short:'24 Aug', month:'August', type:'explore', km:6.1, secs:2210, careerAfter:17.9, seed:6,
+    corners:[[0,0],[3,0],[3,-2],[5,-2],[5,1],[2,1],[2,3],[0,3],[0,0]], splits:[360,358,366,372,361,355],
+    found:[[.2,'pedlar','An old man selling maps',3,'Buy the leather cap',{ gold:-15, item:['Leather Cap','#E8DCC8'] }],
+           [.5,'waystone','A roadside spring',2,'Drink and rest',{ hp:3 }],
+           [.82,'cache','A locked chest in a ditch',2,'Smash the lock',{ gold:42 }]] },
+];
+RUNS.forEach(r => {
+  r.gold = r.found.reduce((a, f) => a + (f[5].gold || 0), 0);
+  r.hp = r.found.reduce((a, f) => a + (f[5].hp || 0), 0);
+  r.items = r.found.filter(f => f[5].item).map(f => f[5].item);
+});
+function lootChips(l) {
+  const out = [];
+  if (l.gold) out.push(`<span class="lc" style="color:${l.gold > 0 ? '#FFD700' : '#e0776f'}">${l.gold > 0 ? '+' : '−'}${Math.abs(l.gold)} gold</span>`);
+  if (l.hp) out.push(`<span class="lc" style="color:${l.hp > 0 ? '#7FC98A' : '#e04a3a'}">${l.hp > 0 ? '+' : '−'}${Math.abs(l.hp)} hp</span>`);
+  if (l.item) out.push(`<span class="lc" style="color:${l.item[1]}">${l.item[0]}</span>`);
+  if (l.note) out.push(`<span class="lc" style="color:#8B7355">${l.note}</span>`);
+  return out.join('');
+}
+const SV = 'http://www.w3.org/2000/svg';
+const pad2 = n => String(n).padStart(2, '0');
+function fmtPace(sec) { return Math.floor(sec / 60) + ':' + pad2(Math.round(sec % 60)); }
+function fmtDur(sec) { sec = Math.round(sec); const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60);
+  return h ? `${h}:${pad2(m)}:${pad2(sec % 60)}` : `${m}:${pad2(sec % 60)}`; }
+function fmtDelta(d) { d = Math.round(d); return (d < 0 ? '−' : '+') + Math.floor(Math.abs(d) / 60) + ':' + pad2(Math.abs(d) % 60); }
+// streets are a jittered grid; the route walks its corners, so it is always on a street
+function jn(r, i, j) { return { x: i * 100 + (rnd(i, j, r.seed + 11) - .5) * 30, y: j * 100 + (rnd(i, j, r.seed + 12) - .5) * 30 }; }
+function routeOf(r) {
+  if (r._pts) return r;
+  const pts = [], cells = [];
+  for (let c = 0; c < r.corners.length - 1; c++) {
+    let [i, j] = r.corners[c]; const [ti, tj] = r.corners[c + 1];
+    while (i !== ti || j !== tj) { pts.push(jn(r, i, j)); cells.push([i, j]); i += Math.sign(ti - i); j += Math.sign(tj - j); }
+  }
+  const last = r.corners[r.corners.length - 1]; pts.push(jn(r, ...last)); cells.push(last);
+  const cum = [0]; for (let k = 1; k < pts.length; k++) cum.push(cum[k - 1] + Math.hypot(pts[k].x - pts[k - 1].x, pts[k].y - pts[k - 1].y));
+  r._pts = pts; r._cells = cells; r._cum = cum; r._len = cum[cum.length - 1];
+  return r;
+}
+function pointAt(r, f) { const s = f * r._len, c = r._cum; let k = 1; while (k < c.length - 1 && c[k] < s) k++;
+  const a = r._pts[k - 1], b = r._pts[k], t = (s - c[k - 1]) / (c[k] - c[k - 1] || 1); return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t }; }
+function fitter(r, W, H, padX, top, bottom) {
+  const xs = r._pts.map(p => p.x), ys = r._pts.map(p => p.y);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const k = Math.min((W - padX * 2) / Math.max(1, x1 - x0), (H - top - bottom) / Math.max(1, y1 - y0));
+  const ox = (W - (x1 - x0) * k) / 2, oy = top + (H - top - bottom - (y1 - y0) * k) / 2;
+  return p => [ox + (p.x - x0) * k, oy + (p.y - y0) * k];
+}
+const ptsStr = (r, pr) => r._pts.map(p => pr(p).map(v => v.toFixed(1)).join(',')).join(' ');
+
+/* the list */
+const aList = $('aList');
+let lastMonth = null;
+RUNS.forEach((r, i) => {
+  routeOf(r);
+  if (r.month !== lastMonth) {
+    lastMonth = r.month;
+    const km = RUNS.filter(q => q.month === r.month).reduce((a, q) => a + q.km, 0);
+    aList.insertAdjacentHTML('beforeend', `<div class="aBand"><b>${r.month.toUpperCase()}</b><span><i>${km.toFixed(1)}</i> km</span></div>`);
+  }
+  const next = RUNS[i + 1], lastInMonth = !next || next.month !== r.month;
+  const pr = fitter(r, 53, 53, 7, 7, 7);
+  const dots = r.found.map(([f, k]) => { const [x, y] = pr(pointAt(r, f)); return `<circle cx="${x}" cy="${y}" r="2.1" fill="${RUNE_META[k].c}"/>`; }).join('');
+  const [ex, ey] = pr(r._pts[r._pts.length - 1]);
+  const pl = ptsStr(r, pr);
+  const line = r.trial ? `<div class="aTrialLine"><span class="aPill">Beaten</span>${r.trial.name}</div>`
+    : `<div class="aLine">“${r.found[r.found.length - 1][2]}”</div>`;
+  const row = document.createElement('div');
+  row.className = 'aRow' + (lastInMonth ? ' last' : ''); row.tabIndex = 0;
+  row.innerHTML = `<div class="aRail"><div class="aMile ${r.trial ? 'trial' : ''}"><span class="mci">${g(r.trial ? 0xf023c : 0xf046e)}</span></div><div class="aStem"></div></div>
+    <div class="aRowBody"><div class="aRowInfo"><div class="aRowTop"><span class="aKm">${r.km.toFixed(2)}<small> km</small></span><span class="aDot"></span>
+      <span class="aPace">${fmtPace(r.secs / r.km)}<small> /km</small></span><span class="aDate">${r.short}</span></div>${line}</div>
+      <div class="aThumb"><svg viewBox="0 0 53 53"><polyline points="${pl}" fill="none" stroke="#C4A04A" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round" opacity=".16"/>
+        <polyline points="${pl}" fill="none" stroke="#C4A04A" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>${dots}<circle cx="${ex}" cy="${ey}" r="1.8" fill="#E8DCC8"/></svg></div></div>`;
+  row.onclick = () => openRun(i, true);
+  row.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openRun(i, true); } };
+  aList.appendChild(row); r._row = row;
+});
+
+/* the detail */
+const dBody = $('dBody');
+let playId = 0, autoScroll = null;
+function levelOf(km) { let l = 1; LV.forEach((t, i) => { if (km >= t) l = i + 1; }); return Math.min(10, l); }
+function openRun(i, fromTap) {
+  const r = RUNS[i], id = ++playId;
+  RUNS.forEach(q => q._row.classList.toggle('sel', q === r));
+  $('dTitle').textContent = r.short; $('dMeta').textContent = `${r.type} · ${r.day}`;
+  const W = 300, H = 270, pr = fitter(r, W, H, 34, 30, 118);
+  // streets: every grid edge near the route, a few missing, the route's own always there
+  const [ci0, ci1] = [Math.min(...r._cells.map(c => c[0])) - 3, Math.max(...r._cells.map(c => c[0])) + 3];
+  const [cj0, cj1] = [Math.min(...r._cells.map(c => c[1])) - 4, Math.max(...r._cells.map(c => c[1])) + 4];
+  const onRoute = new Set(); for (let k = 1; k < r._cells.length; k++) { const a = r._cells[k - 1].join(), b = r._cells[k].join(); onRoute.add(a + '|' + b); onRoute.add(b + '|' + a); }
+  let st = '';
+  for (let a = ci0; a <= ci1; a++) for (let b = cj0; b <= cj1; b++) {
+    [[a + 1, b], [a, b + 1]].forEach(([c, d], n) => {
+      const key = a + ',' + b + '|' + c + ',' + d;
+      if (!onRoute.has(key) && rnd(a, b, r.seed * 3 + n) < .16) return;
+      const [x1, y1] = pr(jn(r, a, b)), [x2, y2] = pr(jn(r, c, d));
+      const major = rnd(a, b, r.seed + 40 + n) > .8;
+      st += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${major ? '#33261a' : '#271d12'}" stroke-width="${major ? 5 : 3}" stroke-linecap="round"/>`;
+    });
+  }
+  const pl = ptsStr(r, pr);
+  const pins = r.found.map(([f, k], n) => { const [x, y] = pr(pointAt(r, f)), c = RUNE_META[k].c;
+    return `<g class="pin" data-f="${f}" style="opacity:0;transition:opacity .3s"><circle cx="${x}" cy="${y}" r="18" fill="${c}" opacity=".1"/><circle cx="${x}" cy="${y}" r="7" fill="#140d06" stroke="${c}" stroke-width="1.5"/><circle cx="${x}" cy="${y}" r="2.8" fill="${c}"/></g>`; }).join('');
+  const [sx, sy] = pr(r._pts[0]);
+  // level ring, as the run left it
+  const lv = levelOf(r.careerAfter), lo = LV[lv - 1], hi = LV[lv] ?? lo, frac = hi > lo ? (r.careerAfter - lo) / (hi - lo) : 1;
+  const RC = 2 * Math.PI * 25;
+  const avg = r.secs / r.km, target = r.trial ? r.trial.limit / r.km : avg;
+  const splitRows = r.splits.map((v, k) => `<div class="spRow ${v > target ? 'slow' : ''}"><span class="spN">${k + 1} km</span><span class="spV">${fmtPace(v)}</span>
+    <div class="spBar"><i data-w="${Math.min(100, v / (target * 1.4) * 100)}"></i></div><span class="spD">${fmtDelta(v - target)}</span></div>`).join('');
+  const splitsHtml = `<div class="spHead"><b>Splits</b><span>${r.trial ? 'target ' + fmtPace(target) + ' /km' : 'average ' + fmtPace(avg) + ' /km'}</span></div><div class="spRows">${splitRows}</div>`;
+  const body = r.trial ? `
+    <div class="dCard"><div class="dCardHead"><span class="mci" style="color:#C4A04A;font-size:12px">${g(0xf051b)}</span><span class="dCardT">${r.trial.name}</span><span class="tPill">Beaten</span></div>
+      <div class="tStats"><div><b class="win">${fmtDur(r.secs)}</b><span>Your time</span></div><div><b>${fmtDur(r.trial.limit)}</b><span>Limit</span></div><div><b>+${r.trial.gold}</b><span>Gold</span></div></div>
+      <div class="tSplits">${splitsHtml}</div>
+      <div class="tFoot">Beaten by ${fmtDur(r.trial.limit - r.secs)}. No runes on a trial, just the clock.</div></div>` : `
+    <div class="dCard">${splitsHtml}</div>
+    <div class="dCard"><div class="dCardT">The takings</div><div class="dPills">
+      <div class="dPill"><span class="mci" style="color:#FFD700">${g(0xf0d2e)}</span><b style="color:#FFD700">${r.gold >= 0 ? '+' : '−'}${Math.abs(r.gold)}</b><span>gold</span></div>
+      <div class="dPill"><span class="mci" style="color:#e04a3a">${g(0xf02d1)}</span><b style="color:#e04a3a">${r.hp ? (r.hp > 0 ? '+' : '−') + Math.abs(r.hp) : '±0'}</b><span>hp</span></div>
+      ${r.items.map(([n, c]) => `<div class="dPill"><span class="mci" style="color:#C4A04A">${g(0xf0e10)}</span><b style="color:${c}">${n}</b></div>`).join('')}</div></div>
+    <div class="dCard"><div class="dCardHead"><span class="dCardT">Chronicle</span><span class="dCount">${r.found.length} discovered</span></div>
+      <div class="chronA">${r.found.map(([f, k, name, ex, choice, loot]) => { const m = RUNE_META[k];
+        return `<div class="cRow"><div class="cRail"><div class="cDot" style="background:${m.c}22;border-color:${m.c};color:${m.c}"><span class="mci">${g(m.ico)}</span></div><div class="cStem"></div></div>
+          <div class="cInfo"><b>${name}</b><div class="m" style="color:${m.c}">${m.name.toUpperCase()} · ${ex} exchange${ex === 1 ? '' : 's'}</div><div class="q">“${choice}”</div><div class="loot">${lootChips(loot)}</div></div>
+          <span class="cDist">${(f * r.km).toFixed(2)}<small> km</small></span></div>`; }).join('')}</div></div>`;
+  dBody.innerHTML = `
+    <div class="dMap"><svg viewBox="0 0 ${W} ${H}">${st}
+        <polyline points="${pl}" fill="none" stroke="#C4A04A" stroke-width="7" opacity=".14" stroke-linejoin="round" stroke-linecap="round"/>
+        <polyline id="dRoute" points="${pl}" fill="none" stroke="#C4A04A" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="${sx}" cy="${sy}" r="4" fill="#1a1008" stroke="#C4A04A" stroke-width="2"/>${pins}
+        <circle id="dMe" r="4.5" fill="#E8DCC8" stroke="#1a1008" stroke-width="2"/></svg>
+      <div class="fade"></div>
+      <div class="dHero"><div class="big"><b id="hDist">0.00</b><small>km</small></div>
+        <div class="sm"><span>Time</span><b id="hTime">0:00</b></div>
+        <div class="sm"><span>Pace</span><b>${fmtPace(avg)}<small> /km</small></b></div>
+        <div class="sm"><span>Scenes</span><b id="hScenes">0</b></div></div></div>
+    <div class="dCard dRing"><div class="rw"><svg viewBox="0 0 61 61"><circle cx="30.5" cy="30.5" r="25" fill="none" stroke="#2a1f14" stroke-width="5.5"/>
+        <circle class="dRingFill" id="dRingFill" cx="30.5" cy="30.5" r="25" fill="none" stroke="#C4A04A" stroke-width="5.5" stroke-linecap="round" stroke-dasharray="0 ${RC}" transform="rotate(-90 30.5 30.5)"/></svg>
+        <div class="c"><b>${lv}</b><small>LEVEL</small></div></div>
+      <div class="rt"><b>${(hi - r.careerAfter).toFixed(1)} km to Level ${lv + 1}</b><span>${r.careerAfter.toFixed(1)} km career · this run added ${r.km.toFixed(2)} km</span></div></div>
+    ${body}`;
+  dBody.scrollTop = 0;
+  // play: the route draws, the numbers run, the pins land as it passes them
+  const route = $('dRoute'), L = route.getTotalLength(), me = $('dMe');
+  route.style.strokeDasharray = L; route.style.strokeDashoffset = L;
+  const pinEls = [...dBody.querySelectorAll('.pin')];
+  const dur = RM ? 1 : 2600, t0 = performance.now();
+  setTimeout(() => $('dRingFill') && id === playId && $('dRingFill').setAttribute('stroke-dasharray', `${RC * frac} ${RC}`), RM ? 0 : 500);
+  (function frame(t) {
+    if (id !== playId) return;
+    const p = Math.min(1, Math.max(0, (t - t0) / dur)), e = 1 - Math.pow(1 - p, 2.2);
+    route.style.strokeDashoffset = L * (1 - e);
+    const q = route.getPointAtLength(L * e); me.setAttribute('cx', q.x); me.setAttribute('cy', q.y);
+    $('hDist').textContent = (r.km * e).toFixed(2); $('hTime').textContent = fmtDur(r.secs * e);
+    let n = 0; pinEls.forEach(el => { if (e >= +el.dataset.f) { el.style.opacity = 1; n++; } });
+    $('hScenes').textContent = n;
+    if (p < 1) requestAnimationFrame(frame); else { me.style.opacity = 0; reveal(); if (!RM) startAutoScroll(id); }
+  })(t0);
+  reveal();
+}
+// splits fill and chronicle rows arrive as they scroll into the phone's view
+function reveal() {
+  const top = dBody.getBoundingClientRect().bottom - 20;
+  dBody.querySelectorAll('.spBar i').forEach(el => { if (el.getBoundingClientRect().top < top && !el.style.width) el.style.width = el.dataset.w + '%'; });
+  dBody.querySelectorAll('.cRow').forEach((el, k) => { if (el.getBoundingClientRect().top < top) el.classList.add('on'); });
+}
+dBody.addEventListener('scroll', reveal, { passive:true });
+function startAutoScroll(id) {
+  cancelAnimationFrame(autoScroll);
+  let lastT = null, wait = 700;
+  (function tick(t) {
+    if (id !== playId) return;
+    if (lastT === null) lastT = t;
+    const dt = t - lastT; lastT = t;
+    if (wait > 0) wait -= dt;
+    else { dBody.scrollTop += dt * .05; if (dBody.scrollTop + dBody.clientHeight >= dBody.scrollHeight - 1) return; }
+    autoScroll = requestAnimationFrame(tick);
+  })(performance.now());
+}
+['wheel', 'touchstart', 'pointerdown'].forEach(ev => dBody.addEventListener(ev, () => { playId++; cancelAnimationFrame(autoScroll); $('dMe') && ($('dMe').style.opacity = 0);
+  const route = $('dRoute'); if (route) route.style.strokeDashoffset = 0; dBody.querySelectorAll('.pin').forEach(p => p.style.opacity = 1); reveal(); }, { passive:true }));
+RUNS[0]._row.classList.add('sel');
+once(dBody, () => openRun(0), .4);
+
+/* ---------- the quote: a live waveform and the line typed out as if narrated ---------- */
+const qWave = $('qWave');
+[30,60,90,55,75,40,100,65,35,80,50,25,70,45,85,30,55,20,60,40,75,35].forEach((h, i) => {
+  const b = document.createElement('i'); b.style.setProperty('--h', h + '%'); b.style.animationDelay = (i * .07) + 's';
+  b.style.animationPlayState = 'paused'; qWave.appendChild(b);
+});
+const qText = $('qText'), LINE = qText.getAttribute('aria-label');
+once($('quote'), () => {
+  const bs = [...qWave.children];
+  if (RM) { qText.textContent = '"' + LINE + '"'; return; }
+  bs.forEach(b => b.style.animationPlayState = 'running');
+  let n = 0; const full = '"' + LINE + '"';
+  const t = setInterval(() => {
+    n++; qText.innerHTML = full.slice(0, n) + '<span class="cur"></span>';
+    if (n >= full.length) { clearInterval(t); setTimeout(() => { qText.textContent = full; bs.forEach(b => b.style.animationPlayState = 'paused'); }, 900); }
+  }, 32);
+}, .5);
+
+/* ---------- pricing: the four free runs fill in ---------- */
+const pips = [...$('pips').children];
+once($('pips'), () => pips.forEach((p, i) => setTimeout(() => p.classList.add('on'), RM ? 0 : 300 + i * 220)), .8);
+
+/* ---------- faq: smooth open/close ---------- */
+document.querySelectorAll('details').forEach(d => {
+  const sum = d.querySelector('summary'), ans = d.querySelector('.ans');
+  sum.addEventListener('click', e => {
+    if (RM) return;
+    e.preventDefault();
+    if (d.open) {
+      ans.animate([{ height: ans.offsetHeight + 'px', opacity:1 }, { height:'0px', opacity:0 }], { duration:260, easing:'ease' }).onfinish = () => d.open = false;
+    } else {
+      d.open = true;
+      ans.animate([{ height:'0px', opacity:0 }, { height: ans.offsetHeight + 'px', opacity:1 }], { duration:320, easing:'cubic-bezier(.2,.9,.25,1)' });
+    }
+  });
+});
+</script>
+</body>
+</html>
